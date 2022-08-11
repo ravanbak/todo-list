@@ -1,3 +1,4 @@
+import { display } from './display';
 import { todoList } from "./todo-list";
 
 todoList.addTodoItem(undefined, 'thing to do');
@@ -16,7 +17,7 @@ console.log('PROJECTS:');
 projectNames.forEach(element => {
     let p = todoList.getProject(element);
 
-    console.log(p.name);
+    console.log(`[${p.name}]`);
 
     let items = p.getTodoItems();
 
@@ -25,7 +26,7 @@ projectNames.forEach(element => {
             // console.log('>>>' + element.title);
             for (p in element) {
                 if (element[p]) {
-                    console.log(`>>> ${p}: ${element[p]}`);
+                    console.log(`> ${p}: ${element[p]}`);
                 }
             }
         });

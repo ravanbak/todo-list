@@ -1,5 +1,6 @@
 import * as projectModule from './todo-project';
 import * as itemModule from './todo-item';
+import * as pubSub from './pubsub';
 
 const todoList = (function() {
     const _DEFAULT_PROJECT_NAME = 'To Do';
@@ -17,14 +18,24 @@ const todoList = (function() {
         const project = projectModule.createProject(projectName);
         _projects.push(project);
 
+        pubSub.publish("projectAdded", { projectName });
+
         return project;
     }
 
     function deleteProject(projectName) {
+        if (projectName === _DEFAULT_PROJECT_NAME) {
+            console.log('Cannot delete default project.');
+
+            return;
+        }
+        
         const idx = getProjectNames().indexOf(projectName);
 
         if (idx > -1) {
             _projects.splice(idx, 1);
+
+            pubSub.publish("projectDeleted", { projectName });
         }
     }
 
