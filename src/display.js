@@ -30,7 +30,7 @@ const display = (function() {
         header.classList.add('site__header');
 
         const divTitle = domUtil.addElement(header, 'div', '', 'hero-text');
-        const h1 = domUtil.addElement(divTitle, 'h1', 'Todoodly');
+        const h1 = domUtil.addElement(divTitle, 'h1', 'Todoodli');
     
         return header;
     }
@@ -65,11 +65,19 @@ const display = (function() {
 
     function _generatePage(project) {
         const page = document.createElement('div');
-        page.classList.add('container');
+        page.classList.add('container', 'todo-list');
         
         const todoList = project.getTodoItems();
         for (let i = 0; i < todoList.length; i++) {
-            domUtil.addElement(page, 'div', todoList[i].title, 'todo-item');
+            let itemContainer = domUtil.addElement(page, 'div', '', 'todo-item');
+
+            // domUtil.addElement(page, 'div', todoList[i].title, 'todo-item');
+            let todoItem = domUtil.addElement(itemContainer, 'input', todoList[i].title);
+            todoItem.type = 'checkbox';
+            // todoItem.name = `item${i.toString()}`;
+
+            let label = domUtil.addElement(itemContainer, 'label', todoList[i].title);
+            label.style.for = `item${i.toString()}`;
         }
 
         return page;

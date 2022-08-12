@@ -32,6 +32,29 @@
     border: solid 1px black;
 }
 
+.todo-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.todo-item {
+    display: flex;
+    margin: 10px 0 0 0;
+    padding: 5px;
+    font-size: 1.6rem;
+    background-color: hsl(60, 80%, 82%);
+    border-radius: 6px;
+    border: 1px solid hsl(60, 80%, 60%);
+}
+
+.todo-item input {
+    width: 30px;
+}
+
+.todo-item label {
+    padding-left: 10px;
+}
+
 .site__page {
     margin: 0;
     padding: 20px;

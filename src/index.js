@@ -53,9 +53,16 @@ const controller = (function() {
 
         const projectGroceries = todoList.addProject('Groceries');
         todoList.addTodoItem('Groceries','bananas');
+        todoList.addTodoItem('Groceries','nectarines');
         todoList.addTodoItem('Groceries','apples');
         todoList.addTodoItem('Groceries','plantains');
         todoList.addTodoItem('Groceries','flour', 'gluten free', null, 'high', 'President\'s Choice');
+        todoList.addTodoItem('Groceries','milk');
+        todoList.addTodoItem('Groceries','cream');
+        todoList.addTodoItem('Groceries','butter');
+        todoList.addTodoItem('Groceries','eggs');
+        todoList.addTodoItem('Groceries','bacon');
+        todoList.addTodoItem('Groceries','aged cheddar');
         todoList.deleteTodoItem('Groceries', 'apples');
 
         const projectGarden = todoList.addProject('Garden');
