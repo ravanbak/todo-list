@@ -15,10 +15,33 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            //template: './src/index.html',
-            // favicon: './src/assets/favicon.png',
+            template: './src/index.html',
+            favicon: './src/assets/check.png',
             title: 'TODOODLY'
         }),
         new webpack.ProgressPlugin(),
-    ],    
+    ],
+    module: {
+        rules: [
+            {
+                test: /\.css$/i,
+                loader: "style-loader",
+            },
+            {
+                test: /\.css$/i,
+                loader: "css-loader",
+                options: {
+                    url: true,
+                },
+            },            
+            {
+                test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                type: 'asset/resource',
+            },
+            {
+                test: /\.(woff|woff2|eot|ttf|otf)$/i,
+                type: 'asset/resource',
+            },            
+        ],
+    },    
 };

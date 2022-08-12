@@ -1,46 +1,41 @@
 import * as projectModule from './todo-project';
 import * as itemModule from './todo-item';
-import * as pubSub from './pubsub';
 
 const todoList = (function() {
-    const _DEFAULT_PROJECT_NAME = 'To Do';
-
     let _projects = [];
 
     const init = (function(){
-        addProject(_DEFAULT_PROJECT_NAME);
+
     })();
 
+    const getProjects = () => _projects;
     const getProjectNames = () => _projects.map(el => el.name);
 
     function addProject(projectName) {
-        // Create a default project.
         const project = projectModule.createProject(projectName);
-        _projects.push(project);
 
-        pubSub.publish("projectAdded", { projectName });
+        if (project) {
+            _projects.push(project);
 
-        return project;
+            return project;
+        }
     }
 
     function deleteProject(projectName) {
-        if (projectName === _DEFAULT_PROJECT_NAME) {
-            console.log('Cannot delete default project.');
+        const idx = _projects.findIndex((p) => p.name === projectName );
 
-            return;
+        if (idx < 0) {
+            console.log(`Project "${projectName}" not found!`);
+        } 
+        else {
+            _projects.splice(idx, 1);
         }
         
-        const idx = getProjectNames().indexOf(projectName);
-
-        if (idx > -1) {
-            _projects.splice(idx, 1);
-
-            pubSub.publish("projectDeleted", { projectName });
-        }
+        return (idx > -1);
     }
 
     function getProject(projectName) {
-        const idx = getProjectNames().indexOf(projectName);
+        const idx = _projects.findIndex((p) => p.name === projectName );
 
         if (idx < 0) {
             console.log(`Project "${projectName}" not found!`);
@@ -50,7 +45,7 @@ const todoList = (function() {
         }
     }
 
-    function addTodoItem(projectName = _DEFAULT_PROJECT_NAME, title, desc, dueDate, priority = 'normal', notes) {
+    function addTodoItem(projectName, title, desc, dueDate, priority = 'normal', notes) {
         const p = getProject(projectName);
         if (!p) {
             console.log(`Project "${projectName}" not found!`);
@@ -63,21 +58,22 @@ const todoList = (function() {
         p.addTodoItem(todoItem);
     }
 
-    function deleteTodoItem(projectName = _DEFAULT_PROJECT_NAME, title) {
+    function deleteTodoItem(projectName, title) {
         const p = getProject(projectName);
         if (!p) {
             console.log(`Project "${projectName}" not found!`);
 
-            return;
+            return false;
         }
 
-        p.deleteTodoItem(title);
+        return p.deleteTodoItem(title);
     }
 
     return {
         addProject,
         deleteProject,
         getProject,
+        getProjects,
         getProjectNames,
         addTodoItem,
         deleteTodoItem,

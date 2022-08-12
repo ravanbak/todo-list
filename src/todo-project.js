@@ -16,6 +16,8 @@ function createProject(name) {
         else {
             _todoItems.splice(idx, 1);
         }
+
+        return (idx > -1);
     }
 
     function getTodoItems() {
