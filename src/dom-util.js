@@ -1,19 +1,23 @@
-export function addElement(parent, tagName, textContent, className, id) {
-    const el = document.createElement(tagName);
+export function addElement({ tag, 
+                                parent, 
+                                classList, 
+                                id, 
+                                textContent,
+                                type,
+                                name }) {
+    if (!tag) return;
 
-    if (textContent) {
-        el.textContent = textContent;
-    }
+    const el = document.createElement(tag);
+
+    if (textContent) el.textContent = textContent;   
+    if (classList) el.classList.add(...classList);
+    if (id) el.id = id;
+    if (type) el.type = type;
+    if (name) el.name = name;
     
-    if (className) {
-        el.classList.add(className);
+    if (parent) {
+        parent.appendChild(el);
     }
-
-    if (id) {
-        el.id = id;
-    }
-
-    parent.appendChild(el);
 
     return el;
 }

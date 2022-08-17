@@ -45,7 +45,7 @@ const todoList = (function() {
         }
     }
 
-    function addTodoItem(projectName, title, desc, dueDate, priority = 'normal', notes) {
+    function addTodoItem(projectName, title, desc, dueDate, priority, notes) {
         const p = getProject(projectName);
         if (!p) {
             console.log(`Project "${projectName}" not found!`);

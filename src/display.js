@@ -1,16 +1,64 @@
 import * as pubSub from './pubsub';
-import * as domUtil from './dom-util';
+import { addElement, deleteAllChildren } from './dom-util';
 
 const display = (function() {
     function renderSite(projects, activeProject) {
         // Render entire site (including header and footer).
 
-        domUtil.deleteAllChildren('div#site');
+        deleteAllChildren('div#site');
 
         const site = document.querySelector('div#site');
         site?.appendChild(_generateHeader());
         site?.appendChild(_generateContent(projects, activeProject));
         site?.appendChild(_generateFooter());
+    }
+
+    function showMessage(message) {
+        console.log(`EVENT MESSAGE: ${message}`);
+    }
+
+    function _generateHeader() {
+        const header = addElement({ tag: 'div' });
+        header.classList.add('site__header');
+
+        const divTitle = addElement({ 
+            tag: 'div', 
+            parent: header, 
+            classList: [ 'hero-text' ],
+        });
+
+        addElement({
+            tag: 'h1',
+            parent: divTitle,
+            textContent:  'Todoodli',
+        });
+    
+        return header;
+    }
+
+    function _generateContent(projects, activeProject) {
+        const pageContent = addElement({
+            tag: 'div', 
+            classList: ['container', 'site__content'],
+        });
+
+        const sidebarContainer = addElement({
+            tag: 'div', 
+            parent: pageContent, 
+            classList: [ 'site__sidebar' ],
+        });
+        
+        sidebarContainer.appendChild(_generateSidebar(projects));
+
+        const pageContainer = addElement({
+            tag: 'div', 
+            parent: pageContent, 
+            classList: [ 'site__page' ],
+        });
+
+        pageContainer.appendChild(_generatePage(activeProject));
+
+        return pageContent;
     }
 
     function updateContent(projects, activeProject) {
@@ -21,42 +69,25 @@ const display = (function() {
         page?.replaceWith(updatedPage);
     }
 
-    function showMessage(message) {
-        console.log(`EVENT MESSAGE: ${message}`);
-    }
-
-    function _generateHeader() {
-        const header = document.createElement('div');
-        header.classList.add('site__header');
-
-        const divTitle = domUtil.addElement(header, 'div', '', 'hero-text');
-        const h1 = domUtil.addElement(divTitle, 'h1', 'Todoodli');
-    
-        return header;
-    }
-
-    function _generateContent(projects, activeProject) {
-        const pageContent = document.createElement('div');
-        pageContent.classList.add('container', 'site__content');
-
-        const sidebarContainer = domUtil.addElement(pageContent, 'div', '', 'site__sidebar');
-        sidebarContainer.appendChild(_generateSidebar(projects));
-
-        const pageContainer = domUtil.addElement(pageContent, 'div', '', 'site__page');
-        pageContainer.appendChild(_generatePage(activeProject));
-
-        return pageContent;
-    }
-
     function _generateSidebar(projects) {
-        const sidebar = document.createElement('div');
-        sidebar.classList.add('container');
-        sidebar.textContent = 'PROJECTS';
+        const sidebar = addElement({
+            tag: 'div',
+            classList: ['container'],
+            textContent: 'PROJECTS',
+        });
 
-        const list = domUtil.addElement(sidebar, 'ul');
+        const list = addElement({
+            tag: 'ul',
+            parent: sidebar,
+        });
 
         for (let i = 0; i < projects.length; i++) {
-            let li = domUtil.addElement(list, 'li', projects[i].name);
+            let li = addElement({
+                tag: 'li',
+                parent: list,
+                textContent: projects[i].name,
+            });
+
             li.addEventListener('click', () => pubSub.publish('selectProject', { name: projects[i].name }));
         }
 
@@ -69,36 +100,64 @@ const display = (function() {
         
         const todoList = project.getTodoItems();
         for (let i = 0; i < todoList.length; i++) {
-            let itemContainer = domUtil.addElement(page, 'div', '', 'todo-item');
-
-            // domUtil.addElement(page, 'div', todoList[i].title, 'todo-item');
-            let todoItem = domUtil.addElement(itemContainer, 'input', todoList[i].title);
-            todoItem.type = 'checkbox';
-            // todoItem.name = `item${i.toString()}`;
-
-            let label = domUtil.addElement(itemContainer, 'label', todoList[i].title);
-            label.style.for = `item${i.toString()}`;
+            page.appendChild(_generateTodoCard(todoList[i]));
         }
 
         return page;
     }
 
+    function _generateTodoCard(todoItem) {
+        const divTodoCard = addElement({
+            tag: 'div',
+            classList: [ 'todo-card' ],
+        });
+
+        const checkboxInput = addElement({
+            tag: 'input',
+            parent: divTodoCard,
+            type: 'checkbox',
+            name: todoItem.title,
+        });
+
+        const label = addElement({
+            tag: 'label',
+            parent: divTodoCard,
+            textContent: todoItem.title
+        });
+        label.style.for = todoItem.title;
+
+        return divTodoCard;
+    }
+
     function _generateFooter() {
-        const footer = document.createElement('div');
-        footer.classList.add('site__footer');
+        const footer = addElement({
+            tag: 'div', 
+            classList: [ 'site__footer' ],
+        });    
+        const footerContent = addElement({
+            tag: 'div',
+            parent: footer, 
+            classList: [ 'footer__inner' ],
+        });
     
-        const footerContent = domUtil.addElement(footer, 'div', '', 'footer__inner');
+        addElement({
+            tag: 'span',
+            parent: footerContent,
+            textContent: 'Copyright © 2022 David Ravanbakhsh',
+        });
     
-        domUtil.addElement(footerContent, 'span', 'Copyright © 2022 David Ravanbakhsh');
-    
-        const a = domUtil.addElement(footerContent, 'a');
+        const a = addElement({
+            tag: 'a',
+            parent: footerContent,
+        });
         a.href = 'https://github.com/ravanbak';
         a.target = '_blank';
     
-        const i = domUtil.addElement(a, 'i');
-        i.classList.add('fa-brands');
-        i.classList.add('fa-github-square');
-        i.classList.add('fa-2x');
+        addElement({
+            tag: 'i',
+            parent: a,
+            classList: [ 'fa-brands', 'fa-github-square', 'fa-2x' ],
+        });
     
         return footer;
     }

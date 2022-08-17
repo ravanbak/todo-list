@@ -37,7 +37,7 @@
     flex-direction: column;
 }
 
-.todo-item {
+.todo-card {
     display: flex;
     margin: 10px 0 0 0;
     padding: 5px;
@@ -47,11 +47,11 @@
     border: 1px solid hsl(60, 80%, 60%);
 }
 
-.todo-item input {
+.todo-card input {
     width: 30px;
 }
 
-.todo-item label {
+.todo-card label {
     padding-left: 10px;
 }
 
