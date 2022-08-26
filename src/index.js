@@ -2,6 +2,7 @@ import "./style.css";
 import * as pubSub from './pubsub';
 import { display } from './display';
 import { todoList } from "./todo-list";
+import { Priority } from "./todo-item";
 
 const controller = (function() {
     const _DEFAULT_PROJECT_NAME = 'To Do';
@@ -46,17 +47,17 @@ const controller = (function() {
     }
 
     const createTestData = (function() {
-        todoList.addTodoItem(_DEFAULT_PROJECT_NAME, 'thing to do');
+        todoList.addTodoItem(_DEFAULT_PROJECT_NAME, 'thing to do', '', '', Priority.Low);
         todoList.addTodoItem(_DEFAULT_PROJECT_NAME, 'cross off thing to do after done');
         todoList.addTodoItem(_DEFAULT_PROJECT_NAME, 'cross off the cross off item');
         todoList.addTodoItem(_DEFAULT_PROJECT_NAME, 'finish making this site');
 
         const projectGroceries = todoList.addProject('Groceries');
         todoList.addTodoItem('Groceries','bananas');
-        todoList.addTodoItem('Groceries','nectarines');
+        todoList.addTodoItem('Groceries','nectarines', '', '', Priority.Low);
         todoList.addTodoItem('Groceries','apples');
         todoList.addTodoItem('Groceries','plantains');
-        todoList.addTodoItem('Groceries','flour', 'gluten free', null, 'high', 'President\'s Choice');
+        todoList.addTodoItem('Groceries','flour', 'gluten free', null, Priority.High, 'President\'s Choice');
         todoList.addTodoItem('Groceries','milk');
         todoList.addTodoItem('Groceries','cream');
         todoList.addTodoItem('Groceries','butter');
@@ -78,28 +79,5 @@ const controller = (function() {
     })();
 
 })();
-
-// const projectNames = todoList.getProjectNames();
-
-// console.log('PROJECTS:');
-
-// projectNames.forEach(element => {
-//     let p = todoList.getProject(element);
-
-//     console.log(`[${p.name}]`);
-
-//     let items = p.getTodoItems();
-
-//     if (items) {
-//         items.forEach(element => {
-//             // console.log('>>>' + element.title);
-//             for (p in element) {
-//                 if (element[p]) {
-//                     console.log(`> ${p}: ${element[p]}`);
-//                 }
-//             }
-//         });
-//     }
-// });
 
 display.renderSite(todoList.getProjects(), todoList.getProject('To Do'));

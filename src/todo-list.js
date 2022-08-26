@@ -1,5 +1,6 @@
 import * as projectModule from './todo-project';
 import * as itemModule from './todo-item';
+import { compareAsc } from 'date-fns'
 
 const todoList = (function() {
     let _projects = [];
