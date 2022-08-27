@@ -121,13 +121,24 @@ const content = (function() {
             const divTodoCard = addElement({
                 tag: 'div',
                 classList: ['todo-card'],
+                id: todoItem.id,
             });
+
+            const divTodoBasic = addElement({
+                tag: 'div',
+                parent: divTodoCard,
+                classList: ['todo-card__basic'],
+            });
+
+            if (todoItem.done) {
+                divTodoBasic.classList.add('todo-done');
+            }
 
             const checkboxContainer = addElement({
                 tag: 'div',
-                    parent: divTodoCard,
-                    classList: ['checkbox'],
-                })
+                parent: divTodoBasic,
+                classList: ['checkbox'],
+            });
             checkboxContainer.style.backgroundColor = _getPriorityColor(todoItem.priority);
 
             const checkboxInput = addElement({
@@ -136,33 +147,90 @@ const content = (function() {
                 type: 'checkbox',
                 name: todoItem.title,
             });
+            checkboxInput.checked = todoItem.done;
+            checkboxInput.addEventListener('change', (e) => _toggleDone(e, todoItem));
 
             const label = addElement({
                 tag: 'label',
-                parent: divTodoCard,
-                textContent: todoItem.title
+                parent: divTodoBasic,
+                textContent: todoItem.title,
             });
             label.style.for = todoItem.title;
     
-            const arrow = addElement({
-                tag: 'span',
-                parent: divTodoCard,
-                classList: ['expander', 'fas'],
-            });
+            if (todoItem.hasDetails()) {
+                const arrow = addElement({
+                    tag: 'span',
+                    parent: divTodoBasic,
+                    classList: ['expander', 'fas'],
+                });
+                arrow.addEventListener('click', () => _expandCollapseTodoItem(todoItem));
 
-            if (todoItem?.expanded) {
-                arrow.classList.add('fa-angle-up');
-            } else {
-                arrow.classList.add('fa-angle-down');
+                if (todoItem?.expanded) {
+                    arrow.classList.add('fa-angle-up');
+                    
+                    const divTodoDetails = addElement({
+                        tag: 'div',
+                        parent: divTodoCard,
+                        classList: ['todo-card__expanded'],
+                    });
+
+                    divTodoDetails.appendChild(_generateExpandedTodoValues(todoItem));
+                } 
+                else {
+                    arrow.classList.add('fa-angle-down');
+                }
             }
 
             return divTodoCard;
         }
     
+        function _generateExpandedTodoValues(todoItem) {
+            const divExpanded = addElement({tag: 'div'});
+
+            if (todoItem.dueDate) {
+                addElement({
+                    tag: 'div',
+                    parent: divExpanded,
+                    textContent: 'Due: ' + format(todoItem.dueDate, 'yyyy-MM-dd, hh:mm'),
+                });
+            }
+
+            addElement({
+                tag: 'div',
+                parent: divExpanded,
+                textContent: 'Description: ' + todoItem.desc,
+            });
+
+            addElement({
+                tag: 'div',
+                parent: divExpanded,
+                textContent: 'Notes: ' + todoItem.notes,
+            });
+
+            return divExpanded;
+        }
+
+        function _toggleDone(e, todoItem) {
+            todoItem.done = e.target.checked;
+            
+            _updateTodoItem(todoItem);
+        }
+
         return {
             generateTodoCard
         };
     })();
+
+    function _updateTodoItem(todoItem) {
+        const newTodoCard = todoCard.generateTodoCard(todoItem);
+        document.querySelector('#' + todoItem.id)?.replaceWith(newTodoCard);
+    }
+
+    function _expandCollapseTodoItem(todoItem) {
+        todoItem.expanded = (!todoItem.expanded);
+
+        _updateTodoItem(todoItem);
+    }
 
     return {
         generateContent,

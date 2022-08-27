@@ -47,7 +47,9 @@ const controller = (function() {
     }
 
     const createTestData = (function() {
-        todoList.addTodoItem(_DEFAULT_PROJECT_NAME, 'thing to do', '', '', Priority.Low);
+        let date = new Date('September 5, 2022 09:30:00');
+
+        todoList.addTodoItem(_DEFAULT_PROJECT_NAME, 'finish this project', 'this project is a todo list', date, Priority.High, 'note: check the box when done');
         todoList.addTodoItem(_DEFAULT_PROJECT_NAME, 'cross off thing to do after done');
         todoList.addTodoItem(_DEFAULT_PROJECT_NAME, 'cross off the cross off item');
         todoList.addTodoItem(_DEFAULT_PROJECT_NAME, 'finish making this site');
@@ -57,7 +59,7 @@ const controller = (function() {
         todoList.addTodoItem('Groceries','nectarines', '', '', Priority.Low);
         todoList.addTodoItem('Groceries','apples');
         todoList.addTodoItem('Groceries','plantains');
-        todoList.addTodoItem('Groceries','flour', 'gluten free', null, Priority.High, 'President\'s Choice');
+        todoList.addTodoItem('Groceries','flour', 'gluten free', Date.now(), Priority.High, 'President\'s Choice');
         todoList.addTodoItem('Groceries','milk');
         todoList.addTodoItem('Groceries','cream');
         todoList.addTodoItem('Groceries','butter');
