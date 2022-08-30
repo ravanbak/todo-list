@@ -3,7 +3,7 @@
     --color-todo-card-background: hsl(60, 80%, 82%);
     --color-todo-card-details-background: hsl(60, 80%, 86%);
     --color-todo-card-border: hsl(60, 18%, 77%);
-    --color-todo-card-done: hsl(60, 30%, 40%);
+    --color-todo-card-done: hsl(60, 30%, 30%);
     --color-todo-card-done-background: hsl(60, 30%, 80%);
     --color-active-project: #55ff44;
     --color-priority-high: red;
@@ -26,14 +26,12 @@
     background-position: center -40px;
     background-size: 1200px;
     background-attachment: fixed;
-    height: 400px;
+    height: 160px;
     /* background-image: linear-gradient(skyblue, azure); */
 }
 
 .site__content {
     display: flex;
-    /* justify-content: space-between; */
-    align-items: stretch;
     margin: auto;
     background: var(--color-content-background);
     min-height: 300px;
@@ -41,15 +39,28 @@
 }
 
 .site__sidebar {
-    margin: 0;
-    padding: 20px;
-    border: solid 1px black;
-    font-size: 2rem;
+    padding: 10px;
+    border: solid 1px rgb(90, 90, 90);
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.site__sidebar ul {
+    font-weight: normal;
+    list-style-type: none;
+    padding: 0 5px 0 5px;
+    text-align: right;
+}
+
+.site__sidebar li {
+    padding: 10px 15px;
+    border-radius: 6px;
+    width: auto;
 }
 
 .site__sidebar .active {
     background-color: var(--color-active-project);
-    font-weight: bold;
 }
 
 .todo-list {
@@ -84,24 +95,36 @@
     border-radius: 6px;
     border: 1px solid var(--color-todo-card-border);
     margin: 5px;
-    /* width: max-content; */
 }
 
 .todo-card__basic {
     display: flex;
     align-items: center;
     padding: 5px;
-    font-size: 1.6rem;
+    font-size: 1rem;
 }
 
 .todo-card__expanded {
     display: flex;
     align-items: center;
     background-color: var(--color-todo-card-details-background);
-    margin: 10px 3.333ch 5px 3.333ch;
+    margin: 10px 3ch 5px 3ch;
     padding: 5px;
-    font-size: 1.2rem;
+    font-size: 1rem;
     border-radius: 6px;
+}
+
+div.detail-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: left;
+}
+
+div.detail-container > .fa-solid {
+    width: 30px;
+    text-align: center;
+    color: rgb(42, 64, 64);
 }
 
 .todo-card input {

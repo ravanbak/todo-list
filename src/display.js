@@ -39,7 +39,7 @@ const sidebar = (function() {
             tag: 'div',
             parent: sidebarContainer,
             classList: ['container'],
-            textContent: 'PROJECTS',
+            textContent: 'Projects',
         });
 
         const list = addElement({
@@ -166,7 +166,7 @@ const content = (function() {
         const addItem = addElement({
             tag: 'div',
             parent: controls,
-            classList: ['add-item', 'fas', 'fa-2xl', 'fa-plus'],
+            classList: ['add-item', 'fa-solid', 'fa-xl', 'fa-plus-circle'],
             //textContent:  '\uf067'
         });
         
@@ -174,7 +174,7 @@ const content = (function() {
         const expandAll = addElement({
             tag: 'div',
             parent: controls,
-            classList: ['expand-all', 'fas', 'fa-2xl', 'fa-angle-double-down'],
+            classList: ['expand-all', 'fa-solid', 'fa-xl', 'fa-angle-double-down'],
         });
         expandAll.addEventListener('click', () => { todoList.forEach(el => el.expanded = true); _updatePage(); });
 
@@ -182,7 +182,7 @@ const content = (function() {
         const collapseAll = addElement({
             tag: 'div',
             parent: controls,
-            classList: ['collapse-all', 'fas', 'fa-2xl', 'fa-angle-double-up'],
+            classList: ['collapse-all', 'fa-solid', 'fa-xl', 'fa-angle-double-up'],
         });
         collapseAll.addEventListener('click', () => { todoList.forEach(el => el.expanded = false); _updatePage(); });
 
@@ -254,7 +254,7 @@ const content = (function() {
                 const arrow = addElement({
                     tag: 'span',
                     parent: divTodoBasic,
-                    classList: ['expander', 'fas'],
+                    classList: ['expander', 'fa-solid'],
                 });
                 arrow.addEventListener('click', () => _expandCollapseTodoItem(todoItem));
 
@@ -285,24 +285,49 @@ const content = (function() {
             const divExpanded = addElement({tag: 'div'});
 
             if (todoItem.dueDate) {
+                const container = addElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
                 addElement({
                     tag: 'div',
-                    parent: divExpanded,
-                    textContent: 'Due: ' + format(todoItem.dueDate, 'yyyy-MM-dd, hh:mm'),
+                    parent: container,
+                    classList: ['fa-solid', 'fa-clock']
+                });
+
+                addElement({
+                    tag: 'div',
+                    parent: container,
+                    textContent: format(todoItem.dueDate, 'MMM-dd-yy, hh:mmaaa'),
                 });
             }
 
-            addElement({
-                tag: 'div',
-                parent: divExpanded,
-                textContent: 'Description: ' + todoItem.desc,
-            });
+            if (todoItem.desc) {
+                const container = addElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
+                addElement({
+                    tag: 'div',
+                    parent: container,
+                    classList: ['fa-solid', 'fa-info-circle']
+                });
 
-            addElement({
-                tag: 'div',
-                parent: divExpanded,
-                textContent: 'Notes: ' + todoItem.notes,
-            });
+                addElement({
+                    tag: 'div',
+                    parent: container,
+                    textContent: todoItem.desc,
+                });
+            }
+
+            if (todoItem.notes) {
+                const container = addElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
+                addElement({
+                    tag: 'div',
+                    parent: container,
+                    classList: ['fa-solid', 'fa-clipboard']
+                });
+
+                addElement({
+                    tag: 'div',
+                    parent: container,
+                    textContent: todoItem.notes,
+                });
+            }
 
             return divExpanded;
         }
