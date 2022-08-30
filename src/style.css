@@ -1,3 +1,17 @@
+:root {
+    --color-content-background: hsl(60, 80%, 86%);
+    --color-todo-card-background: hsl(60, 80%, 82%);
+    --color-todo-card-details-background: hsl(60, 80%, 86%);
+    --color-todo-card-border: hsl(60, 18%, 77%);
+    --color-todo-card-done: hsl(60, 30%, 40%);
+    --color-todo-card-done-background: hsl(60, 30%, 80%);
+    --color-active-project: #55ff44;
+    --color-priority-high: red;
+    --color-priority-normal: #55EE44;
+    --color-priority-low: #eedd00;
+    --box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+}
+
 * {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
@@ -21,7 +35,7 @@
     /* justify-content: space-between; */
     align-items: stretch;
     margin: auto;
-    background: lightgoldenrodyellow;
+    background: var(--color-content-background);
     min-height: 300px;
     max-width: 1200px;
 }
@@ -33,24 +47,49 @@
     font-size: 2rem;
 }
 
+.site__sidebar .active {
+    background-color: var(--color-active-project);
+    font-weight: bold;
+}
+
 .todo-list {
     display: flex;
     flex-direction: column;
 }
 
+.todo-list .controls {
+    display: flex;
+    margin-bottom: 25px;
+}
+
+.todo-list .add-item {
+    color: rgb(42, 64, 64);
+    margin: 10px;
+}
+
+.todo-list .expand-all {
+    color: rgb(42, 64, 64);
+    margin: 10px 10px 10px auto;
+}
+
+.todo-list .collapse-all {
+    color: rgb(42, 64, 64);
+    margin: 10px;    
+}
+
 .todo-card {
     display: flex;
     flex-direction: column;
-    background-color: hsl(60, 80%, 82%);
+    background-color: var(--color-todo-card-background);
     border-radius: 6px;
-    border: 1px solid hsl(60, 80%, 60%);
-    border-color: black;
+    border: 1px solid var(--color-todo-card-border);
+    margin: 5px;
+    /* width: max-content; */
 }
 
 .todo-card__basic {
     display: flex;
     align-items: center;
-    margin: 10px 0 0 0;
     padding: 5px;
     font-size: 1.6rem;
 }
@@ -58,7 +97,7 @@
 .todo-card__expanded {
     display: flex;
     align-items: center;
-    background-color: hsl(60, 80%, 86%);
+    background-color: var(--color-todo-card-details-background);
     margin: 10px 3.333ch 5px 3.333ch;
     padding: 5px;
     font-size: 1.2rem;
@@ -81,6 +120,15 @@
     width: 2ch;
     height: 2ch;
     border-radius: 3px;
+    background-color: var(--color-priority-normal);
+}
+
+.todo-card .priority-high {
+    background-color: var(--color-priority-high);
+}
+
+.todo-card .priority-low {
+    background-color: var(--color-priority-low);
 }
 
 .todo-card .expander {
@@ -89,7 +137,11 @@
 }
 
 .todo-done {
-    background-color: darkgrey;
+    background-color: var(--color-todo-card-done-background);
+    color: var(--color-todo-card-done);
+}
+
+.todo-done label {
     text-decoration: line-through;
 }
 

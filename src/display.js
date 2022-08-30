@@ -56,8 +56,7 @@ const sidebar = (function() {
 
             // hilight the active project
             if (projects[i].name == activeProject.name) {
-                li.style.backgroundColor = '#55FF44';
-                li.style.fontWeight = 'bold';
+                li.classList.add('active')
             }
 
             li.addEventListener('click', () => pubSub.publish('selectProject', { name: projects[i].name }));
@@ -72,13 +71,35 @@ const sidebar = (function() {
 })();
 
 const content = (function() {
+    let _activeProject;
+
+    const SortOrder = Object.freeze({
+        Title: 0,
+        Priority: 1,
+        Date: 2,
+        Custom: 3
+    });
+    let primarySortField = SortOrder.Date;
+    
+    const SortDirection = Object.freeze({
+        Ascending: 1,
+        Descending: -1,
+    });
+    let sortDirection = SortDirection.Ascending;
+
     function generateContent(projects, activeProject) {
+        
+        // Generate the  sidebar and active todo list content and return
+        // a div containing both.
+
+        _activeProject = activeProject;
+
         const pageContent = addElement({
             tag: 'div', 
             classList: ['container', 'site__content'],
         });
 
-        pageContent.appendChild(sidebar.generateSidebar(projects, activeProject));
+        pageContent.appendChild(sidebar.generateSidebar(projects, _activeProject));
 
         const pageContainer = addElement({
             tag: 'div', 
@@ -86,16 +107,85 @@ const content = (function() {
             classList: [ 'site__page' ],
         });
 
-        pageContainer.appendChild(_generatePage(activeProject));
+        pageContainer.appendChild(_generatePage(_activeProject));
 
         return pageContent;
     }
 
+    function _getSortedTodoItems(project) {
+        let items = project.getTodoItems();
+
+        switch (primarySortField) {
+            case SortOrder.Title:
+                if (sortDirection === SortDirection.Ascending) {
+                    return items.sort((a, b) => a.title > b.title ? 1 : -1);
+                } 
+                else {
+                    return items.sort((a, b) => a.title > b.title ? -1 : 1);
+                }
+
+            case SortOrder.Priority:
+                if (sortDirection === SortDirection.Ascending) {
+                    return items.sort((a, b) => a.priority - b.priority);
+                } 
+                else {
+                    return items.sort((a, b) => b.priority - a.priority);
+                }
+
+            case SortOrder.Date:
+                if (sortDirection === SortDirection.Ascending) {
+                    return items.sort((a, b) => compareAsc(a.dueDate, b.dueDate));
+                } 
+                else {
+                    return items.sort((a, b) => compareAsc(b.dueDate, a.dueDate));
+                }                
+        }
+    }
+
+    function _updatePage() {
+        const page = document.querySelector('.todo-list');
+        page.replaceWith(_generatePage(_activeProject));
+    }
+
     function _generatePage(project) {
+
+        // Return a div containing the active project's todo list.
+
         const page = document.createElement('div');
         page.classList.add('container', 'todo-list');
         
-        const todoList = project.getTodoItems();
+        const todoList = _getSortedTodoItems(project);
+
+        const controls = addElement({
+            tag: 'div',
+            parent: page,
+            classList: ['controls']
+        });
+
+        // Add new item button
+        const addItem = addElement({
+            tag: 'div',
+            parent: controls,
+            classList: ['add-item', 'fas', 'fa-2xl', 'fa-plus'],
+            //textContent:  '\uf067'
+        });
+        
+        // Expand all button:
+        const expandAll = addElement({
+            tag: 'div',
+            parent: controls,
+            classList: ['expand-all', 'fas', 'fa-2xl', 'fa-angle-double-down'],
+        });
+        expandAll.addEventListener('click', () => { todoList.forEach(el => el.expanded = true); _updatePage(); });
+
+        // Collapse all button:
+        const collapseAll = addElement({
+            tag: 'div',
+            parent: controls,
+            classList: ['collapse-all', 'fas', 'fa-2xl', 'fa-angle-double-up'],
+        });
+        collapseAll.addEventListener('click', () => { todoList.forEach(el => el.expanded = false); _updatePage(); });
+
         for (let i = 0; i < todoList.length; i++) {
             page.appendChild(todoCard.generateTodoCard(todoList[i]));
         }
@@ -104,25 +194,31 @@ const content = (function() {
     }
 
     const todoCard = (function(todoItem) {
-        const _getPriorityColor = (p) => {
+        const _getPriorityClass = (p) => {
             switch (p) {
                 case Priority.High:
-                    return 'red';
-                    break;
+                    return 'priority-high';
                 case Priority.Low:
-                    return '#EEDD00';
-                    break;
+                    return 'priority-low';
                 default:
-                    return '#55FF44';
+                    return 'priority-normal';
             }
         }
 
         function generateTodoCard(todoItem) {
+
+            // Return a div containing a single todo item
+            // showing the item's basic info. If the item has been 
+            // expanded, extended info will also be displayed.
+
             const divTodoCard = addElement({
                 tag: 'div',
                 classList: ['todo-card'],
                 id: todoItem.id,
             });
+            if (todoItem.done) {
+                divTodoCard.classList.add('todo-done');
+            }
 
             const divTodoBasic = addElement({
                 tag: 'div',
@@ -130,16 +226,12 @@ const content = (function() {
                 classList: ['todo-card__basic'],
             });
 
-            if (todoItem.done) {
-                divTodoBasic.classList.add('todo-done');
-            }
-
             const checkboxContainer = addElement({
                 tag: 'div',
                 parent: divTodoBasic,
                 classList: ['checkbox'],
             });
-            checkboxContainer.style.backgroundColor = _getPriorityColor(todoItem.priority);
+            checkboxContainer.classList.add(_getPriorityClass(todoItem.priority));
 
             const checkboxInput = addElement({
                 tag: 'input',
@@ -156,7 +248,8 @@ const content = (function() {
                 textContent: todoItem.title,
             });
             label.style.for = todoItem.title;
-    
+            label.addEventListener('click', () => _expandCollapseTodoItem(todoItem), {capture: false});
+
             if (todoItem.hasDetails()) {
                 const arrow = addElement({
                     tag: 'span',
@@ -174,7 +267,11 @@ const content = (function() {
                         classList: ['todo-card__expanded'],
                     });
 
-                    divTodoDetails.appendChild(_generateExpandedTodoValues(todoItem));
+                    divTodoDetails.appendChild(_generateExpandedTodoItemContent(todoItem));
+
+                    if (todoItem.done) {
+                        divTodoDetails.classList.add('todo-done');
+                    }
                 } 
                 else {
                     arrow.classList.add('fa-angle-down');
@@ -184,7 +281,7 @@ const content = (function() {
             return divTodoCard;
         }
     
-        function _generateExpandedTodoValues(todoItem) {
+        function _generateExpandedTodoItemContent(todoItem) {
             const divExpanded = addElement({tag: 'div'});
 
             if (todoItem.dueDate) {
