@@ -7,8 +7,18 @@ const Priority = Object.freeze({
 });
 
 function createTodoItem(title, desc, dueDate, priority = Priority.Normal, notes) {
+    let _done = false;
+
     function hasDetails() {
         return (this.desc || this.dueDate || this.notes);
+    }
+
+    function toggleDone() {
+        _done = !_done;
+    }
+
+    function isDone() {
+        return _done;
     }
 
     return {
@@ -18,8 +28,9 @@ function createTodoItem(title, desc, dueDate, priority = Priority.Normal, notes)
         priority,
         notes,
         'id': 'id' + uuidv4(),
-        done: false,
         hasDetails,
+        isDone,
+        toggleDone,
     }
 }
 

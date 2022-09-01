@@ -1,23 +1,25 @@
 function createProject(name) {
     let _todoItems = [];
 
-    // const _todoItemNames = () => _todoItems.map(el => el.name);
-
     function addTodoItem(todoItem) {
-        _todoItems.push(todoItem);
+        _todoItems.unshift(todoItem);
     }
 
-    function deleteTodoItem(title) {
-        const idx = _todoItems.findIndex((el) => el.title === title );
+    function deleteTodoItem(id) {
+        const idx = _todoItems.findIndex(el => el.id === id);
             
         if (idx < 0) {
-            console.log(`Todo item ${title} not found!`);
+            console.log(`Todo item not found!`);
         }
         else {
             _todoItems.splice(idx, 1);
         }
 
         return (idx > -1);
+    }
+
+    function getTodoItem(id) {
+        return _todoItems.find(el => el.id === id);
     }
 
     function getTodoItems() {
@@ -28,6 +30,7 @@ function createProject(name) {
         name,
         addTodoItem,
         deleteTodoItem,
+        getTodoItem,
         getTodoItems,
     }
 }

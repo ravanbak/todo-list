@@ -2,6 +2,7 @@ import * as pubSub from './pubsub';
 import { addElement, deleteAllChildren } from './dom-util';
 import { Priority } from './todo-item';
 import { compareAsc, format } from 'date-fns';
+// import { todoList } from './todo-list';
 
 const header = (function() {
     function generateHeader() {
@@ -32,7 +33,7 @@ const sidebar = (function() {
     function generateSidebar(projects, activeProject) {
         const sidebarContainer = addElement({
             tag: 'div', 
-            classList: [ 'site__sidebar' ],
+            classList: ['site__sidebar'],
         });
 
         const sidebar = addElement({
@@ -79,13 +80,13 @@ const content = (function() {
         Date: 2,
         Custom: 3
     });
-    let primarySortField = SortOrder.Date;
+    let primarySortField = SortOrder.Custom;
     
     const SortDirection = Object.freeze({
         Ascending: 1,
         Descending: -1,
     });
-    let sortDirection = SortDirection.Ascending;
+    let sortDirection = SortDirection.Descending;
 
     function generateContent(projects, activeProject) {
         
@@ -138,13 +139,16 @@ const content = (function() {
                 } 
                 else {
                     return items.sort((a, b) => compareAsc(b.dueDate, a.dueDate));
-                }                
+                }
+
+            default:
+                return items;
         }
     }
 
     function _updatePage() {
         const page = document.querySelector('.todo-list');
-        page.replaceWith(_generatePage(_activeProject));
+        page?.replaceWith(_generatePage(_activeProject));
     }
 
     function _generatePage(project) {
@@ -154,7 +158,7 @@ const content = (function() {
         const page = document.createElement('div');
         page.classList.add('container', 'todo-list');
         
-        const todoList = _getSortedTodoItems(project);
+        const todoItems = _getSortedTodoItems(project);
 
         const controls = addElement({
             tag: 'div',
@@ -162,13 +166,13 @@ const content = (function() {
             classList: ['controls']
         });
 
-        // Add new item button
+        // Add new todo item button
         const addItem = addElement({
             tag: 'div',
             parent: controls,
             classList: ['add-item', 'fa-solid', 'fa-xl', 'fa-plus-circle'],
-            //textContent:  '\uf067'
         });
+        addItem.addEventListener('click', () => pubSub.publish('addItem'));
         
         // Expand all button:
         const expandAll = addElement({
@@ -176,7 +180,7 @@ const content = (function() {
             parent: controls,
             classList: ['expand-all', 'fa-solid', 'fa-xl', 'fa-angle-double-down'],
         });
-        expandAll.addEventListener('click', () => { todoList.forEach(el => el.expanded = true); _updatePage(); });
+        expandAll.addEventListener('click', () => { todoItems.forEach(el => el.expanded = true); _updatePage(); });
 
         // Collapse all button:
         const collapseAll = addElement({
@@ -184,10 +188,10 @@ const content = (function() {
             parent: controls,
             classList: ['collapse-all', 'fa-solid', 'fa-xl', 'fa-angle-double-up'],
         });
-        collapseAll.addEventListener('click', () => { todoList.forEach(el => el.expanded = false); _updatePage(); });
+        collapseAll.addEventListener('click', () => { todoItems.forEach(el => el.expanded = false); _updatePage(); });
 
-        for (let i = 0; i < todoList.length; i++) {
-            page.appendChild(todoCard.generateTodoCard(todoList[i]));
+        for (let i = 0; i < todoItems.length; i++) {
+            page.appendChild(todoCard.generateTodoCard(todoItems[i]));
         }
 
         return page;
@@ -216,7 +220,7 @@ const content = (function() {
                 classList: ['todo-card'],
                 id: todoItem.id,
             });
-            if (todoItem.done) {
+            if (todoItem.isDone()) {
                 divTodoCard.classList.add('todo-done');
             }
 
@@ -239,8 +243,8 @@ const content = (function() {
                 type: 'checkbox',
                 name: todoItem.title,
             });
-            checkboxInput.checked = todoItem.done;
-            checkboxInput.addEventListener('change', (e) => _toggleDone(e, todoItem));
+            checkboxInput.checked = todoItem.isDone();
+            checkboxInput.addEventListener('change', () => pubSub.publish('toggleItemDone', {id: todoItem.id}));
 
             const label = addElement({
                 tag: 'label',
@@ -250,9 +254,16 @@ const content = (function() {
             label.style.for = todoItem.title;
             label.addEventListener('click', () => _expandCollapseTodoItem(todoItem), {capture: false});
 
+            const deleteButton = addElement({
+                tag: 'div',
+                parent: divTodoBasic,
+                classList: ['delete-item', 'fa-solid', 'fa-trash-can', 'hide'],
+            });
+            deleteButton.addEventListener('click', () => pubSub.publish('deleteItem', {id: todoItem.id}));
+
             if (todoItem.hasDetails()) {
                 const arrow = addElement({
-                    tag: 'span',
+                    tag: 'div',
                     parent: divTodoBasic,
                     classList: ['expander', 'fa-solid'],
                 });
@@ -269,7 +280,7 @@ const content = (function() {
 
                     divTodoDetails.appendChild(_generateExpandedTodoItemContent(todoItem));
 
-                    if (todoItem.done) {
+                    if (todoItem.isDone()) {
                         divTodoDetails.classList.add('todo-done');
                     }
                 } 
@@ -289,7 +300,7 @@ const content = (function() {
                 addElement({
                     tag: 'div',
                     parent: container,
-                    classList: ['fa-solid', 'fa-clock']
+                    classList: ['fa-solid', 'fa-calendar-alt']
                 });
 
                 addElement({
@@ -332,30 +343,25 @@ const content = (function() {
             return divExpanded;
         }
 
-        function _toggleDone(e, todoItem) {
-            todoItem.done = e.target.checked;
-            
-            _updateTodoItem(todoItem);
-        }
-
         return {
             generateTodoCard
         };
     })();
 
-    function _updateTodoItem(todoItem) {
+    function updateTodoItem(todoItem) {
         const newTodoCard = todoCard.generateTodoCard(todoItem);
         document.querySelector('#' + todoItem.id)?.replaceWith(newTodoCard);
     }
 
     function _expandCollapseTodoItem(todoItem) {
-        todoItem.expanded = (!todoItem.expanded);
+        todoItem.expanded = !todoItem.expanded;
 
-        _updateTodoItem(todoItem);
+        updateTodoItem(todoItem);
     }
 
     return {
         generateContent,
+        updateTodoItem,
     };
 })();
 
@@ -426,6 +432,7 @@ const display = (function() {
         renderSite,
         updateContent,
         showMessage,
+        updateTodoItem: content.updateTodoItem,
     };
 })();
 

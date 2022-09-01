@@ -1,13 +1,8 @@
 import * as projectModule from './todo-project';
 import * as itemModule from './todo-item';
-import { compareAsc } from 'date-fns'
 
 const todoList = (function() {
     let _projects = [];
-
-    const init = (function(){
-
-    })();
 
     const getProjects = () => _projects;
     const getProjectNames = () => _projects.map(el => el.name);
@@ -46,28 +41,36 @@ const todoList = (function() {
         }
     }
 
-    function addTodoItem(projectName, title, desc, dueDate, priority, notes) {
-        const p = getProject(projectName);
-        if (!p) {
-            console.log(`Project "${projectName}" not found!`);
+    function addTodoItem(project, title, desc, dueDate, priority, notes) {
+        if (!project) {
+            console.log(`Project not found!`);
 
             return;
         }
 
         const todoItem = itemModule.createTodoItem(title, desc, dueDate, priority, notes);
 
-        p.addTodoItem(todoItem);
+        project.addTodoItem(todoItem);
+
+        return todoItem;
     }
 
-    function deleteTodoItem(projectName, title) {
-        const p = getProject(projectName);
-        if (!p) {
-            console.log(`Project "${projectName}" not found!`);
+    function toggleTodoItemDone(project, id) {
+        const todoItem = project.getTodoItem(id);
+
+        todoItem?.toggleDone();
+
+        return todoItem;
+    }
+
+    function deleteTodoItem(project, id) {
+        if (!project) {
+            console.log(`Project "${project.name}" not found!`);
 
             return false;
         }
 
-        return p.deleteTodoItem(title);
+        return project.deleteTodoItem(id);
     }
 
     return {
@@ -78,6 +81,7 @@ const todoList = (function() {
         getProjectNames,
         addTodoItem,
         deleteTodoItem,
+        toggleTodoItemDone,
     }
 })();
 
