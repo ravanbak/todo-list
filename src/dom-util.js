@@ -1,24 +1,20 @@
-export function addElement({ tag, 
-                                parent, 
-                                classList, 
-                                id, 
-                                textContent,
-                                type,
-                                name }) {
-    if (!tag) return;
+export function addElement(args) {
+    if (!args.tag) return;
 
-    const el = document.createElement(tag);
+    const el = document.createElement(args.tag);
 
-    if (textContent) el.textContent = textContent;   
-    if (classList) el.classList.add(...classList);
-    if (id) el.id = id;
-    if (type) el.type = type;
-    if (name) el.name = name;
-    
-    if (parent) {
-        parent.appendChild(el);
+    for (const [key, value] of Object.entries(args)) {
+        if (key === 'classList') {
+            el[key].add(...value);
+        }
+        else if (key === 'parent') {
+            args.parent?.appendChild(el);
+        }
+        else {
+            el[key] = value;
+        }
     }
-
+    
     return el;
 }
 

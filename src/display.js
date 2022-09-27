@@ -73,6 +73,7 @@ const sidebar = (function() {
 
 const content = (function() {
     let _activeProject;
+    let _newTodoItem;
 
     const SortOrder = Object.freeze({
         Title: 0,
@@ -80,7 +81,7 @@ const content = (function() {
         Date: 2,
         Custom: 3
     });
-    let primarySortField = SortOrder.Custom;
+    let primarySortField = SortOrder.Priority;
     
     const SortDirection = Object.freeze({
         Ascending: 1,
@@ -119,36 +120,44 @@ const content = (function() {
         switch (primarySortField) {
             case SortOrder.Title:
                 if (sortDirection === SortDirection.Ascending) {
-                    return items.sort((a, b) => a.title > b.title ? 1 : -1);
+                    items.sort((a, b) => a.title > b.title ? 1 : -1);
                 } 
                 else {
-                    return items.sort((a, b) => a.title > b.title ? -1 : 1);
+                    items.sort((a, b) => a.title > b.title ? -1 : 1);
                 }
+                break;
 
             case SortOrder.Priority:
                 if (sortDirection === SortDirection.Ascending) {
-                    return items.sort((a, b) => a.priority - b.priority);
+                    items.sort((a, b) => a.priority - b.priority);
                 } 
                 else {
-                    return items.sort((a, b) => b.priority - a.priority);
+                    items.sort((a, b) => b.priority - a.priority);
                 }
+                break;
 
             case SortOrder.Date:
                 if (sortDirection === SortDirection.Ascending) {
-                    return items.sort((a, b) => compareAsc(a.dueDate, b.dueDate));
+                    items.sort((a, b) => compareAsc(a.dueDate, b.dueDate));
                 } 
                 else {
-                    return items.sort((a, b) => compareAsc(b.dueDate, a.dueDate));
+                    items.sort((a, b) => compareAsc(b.dueDate, a.dueDate));
                 }
-
-            default:
-                return items;
+                break;
         }
+
+        return items;
     }
 
     function _updatePage() {
         const page = document.querySelector('.todo-list');
         page?.replaceWith(_generatePage(_activeProject));
+    }
+
+    function _setAllItemsExpandedState(todoItems, expanded) {
+        todoItems.forEach(el => el.expanded = expanded); 
+        
+        _updatePage();
     }
 
     function _generatePage(project) {
@@ -159,45 +168,54 @@ const content = (function() {
         page.classList.add('container', 'todo-list');
         
         const todoItems = _getSortedTodoItems(project);
+        const pendingTodoItem = project.getPendingTodoItem();
 
-        const controls = addElement({
+        // Container for page controls
+        const controlsContainer = addElement({
             tag: 'div',
             parent: page,
             classList: ['controls']
         });
 
-        // Add new todo item button
-        const addItem = addElement({
+        // 'Add new todo item' button
+        const addItemButton = addElement({
             tag: 'div',
-            parent: controls,
+            parent: controlsContainer,
             classList: ['add-item', 'fa-solid', 'fa-xl', 'fa-plus-circle'],
         });
-        addItem.addEventListener('click', () => pubSub.publish('addItem'));
+        addItemButton.addEventListener('click', () => pubSub.publish('addItem', { isPending: true }));
         
-        // Expand all button:
-        const expandAll = addElement({
+        // 'Expand all' button:
+        const expandAllButton = addElement({
             tag: 'div',
-            parent: controls,
+            parent: controlsContainer,
             classList: ['expand-all', 'fa-solid', 'fa-xl', 'fa-angle-double-down'],
         });
-        expandAll.addEventListener('click', () => { todoItems.forEach(el => el.expanded = true); _updatePage(); });
+        expandAllButton.addEventListener('click', () => _setAllItemsExpandedState(todoItems, true));
 
-        // Collapse all button:
-        const collapseAll = addElement({
+        // 'Collapse all' button:
+        const collapseAllButton = addElement({
             tag: 'div',
-            parent: controls,
+            parent: controlsContainer,
             classList: ['collapse-all', 'fa-solid', 'fa-xl', 'fa-angle-double-up'],
         });
-        collapseAll.addEventListener('click', () => { todoItems.forEach(el => el.expanded = false); _updatePage(); });
+        collapseAllButton.addEventListener('click', () => _setAllItemsExpandedState(todoItems, false));
 
-        for (let i = 0; i < todoItems.length; i++) {
-            page.appendChild(todoCard.generateTodoCard(todoItems[i]));
+        // If there is a pending todo item (item added through UI but not 
+        // yet accepted by the user), display it at the top of the page.
+        if (pendingTodoItem) {
+            page.appendChild(todoCardModule.generateTodoCard(pendingTodoItem));
         }
 
+        // Display all todo items in the project.
+        for (let i = 0; i < todoItems.length; i++) {
+            page.appendChild(todoCardModule.generateTodoCard(todoItems[i]));
+        }
+        
         return page;
     }
 
-    const todoCard = (function(todoItem) {
+    const todoCardModule = (function(todoItem) {
         const _getPriorityClass = (p) => {
             switch (p) {
                 case Priority.High:
@@ -224,6 +242,7 @@ const content = (function() {
                 divTodoCard.classList.add('todo-done');
             }
 
+            // Container for basic todo item elements
             const divTodoBasic = addElement({
                 tag: 'div',
                 parent: divTodoCard,
@@ -239,27 +258,30 @@ const content = (function() {
 
             const checkboxInput = addElement({
                 tag: 'input',
-                parent: checkboxContainer,
                 type: 'checkbox',
+                parent: checkboxContainer,
                 name: todoItem.title,
             });
             checkboxInput.checked = todoItem.isDone();
             checkboxInput.addEventListener('change', () => pubSub.publish('toggleItemDone', {id: todoItem.id}));
 
-            const label = addElement({
-                tag: 'label',
+            const textInput = addElement({
+                tag: 'input',
+                type: 'text',
                 parent: divTodoBasic,
-                textContent: todoItem.title,
+                placeholder: 'new todo item',
             });
-            label.style.for = todoItem.title;
-            label.addEventListener('click', () => _expandCollapseTodoItem(todoItem), {capture: false});
-
+            if (!_activeProject?.isPendingTodoItem(todoItem) || todoItem.title) {
+                textInput.value = todoItem.title;
+            }
+            textInput.addEventListener('change', (e) => pubSub.publish('changeItem', {id: todoItem.id, title: e.target.value}));
+            
             const deleteButton = addElement({
                 tag: 'div',
                 parent: divTodoBasic,
                 classList: ['delete-item', 'fa-solid', 'fa-trash-can', 'hide'],
             });
-            deleteButton.addEventListener('click', () => pubSub.publish('deleteItem', {id: todoItem.id}));
+            deleteButton.addEventListener('click', () => pubSub.publish('deleteItem', {id: todoItem.id})); 
 
             if (todoItem.hasDetails()) {
                 const arrow = addElement({
@@ -287,7 +309,7 @@ const content = (function() {
                 else {
                     arrow.classList.add('fa-angle-down');
                 }
-            }
+            }          
 
             return divTodoCard;
         }
@@ -349,7 +371,7 @@ const content = (function() {
     })();
 
     function updateTodoItem(todoItem) {
-        const newTodoCard = todoCard.generateTodoCard(todoItem);
+        const newTodoCard = todoCardModule.generateTodoCard(todoItem);
         document.querySelector('#' + todoItem.id)?.replaceWith(newTodoCard);
     }
 

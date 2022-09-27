@@ -3,7 +3,7 @@ import * as itemModule from './todo-item';
 
 const todoList = (function() {
     let _projects = [];
-
+    
     const getProjects = () => _projects;
     const getProjectNames = () => _projects.map(el => el.name);
 
@@ -41,7 +41,7 @@ const todoList = (function() {
         }
     }
 
-    function addTodoItem(project, title, desc, dueDate, priority, notes) {
+    function addTodoItem(project, title, desc, dueDate, priority, notes, isPending) {
         if (!project) {
             console.log(`Project not found!`);
 
@@ -50,7 +50,7 @@ const todoList = (function() {
 
         const todoItem = itemModule.createTodoItem(title, desc, dueDate, priority, notes);
 
-        project.addTodoItem(todoItem);
+        project.addTodoItem(todoItem, isPending);
 
         return todoItem;
     }
@@ -63,10 +63,18 @@ const todoList = (function() {
         return todoItem;
     }
 
-    function deleteTodoItem(project, id) {
-        if (!project) {
-            console.log(`Project "${project.name}" not found!`);
+    function changeTodoItem(project, data) {
+        if (!project || !data.id) {
+            console.log('Project or todo item not found.');
+            return false;
+        }
 
+        return project.changeTodoItem(data);
+    }
+
+    function deleteTodoItem(project, id) {
+        if (!project || !id) {
+            console.log('Project or todo item not found.');
             return false;
         }
 
@@ -80,6 +88,7 @@ const todoList = (function() {
         getProjects,
         getProjectNames,
         addTodoItem,
+        changeTodoItem,
         deleteTodoItem,
         toggleTodoItemDone,
     }

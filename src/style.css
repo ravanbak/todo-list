@@ -1,11 +1,11 @@
 :root {
-    --color-content-background: hsl(60, 80%, 86%);
-    --color-todo-card-background: hsl(60, 80%, 82%);
+    --color-content-background: hsl(60, 100%, 96%);
+    --color-todo-card-background: hsl(60, 100%, 92%);
     --color-todo-card-hover-background: hsl(60, 100%, 82%);
-    --color-todo-card-details-background: hsl(60, 80%, 86%);
-    --color-todo-card-border: hsl(60, 18%, 77%);
+    --color-todo-card-details-background: hsl(60, 100%, 90%);
+    --color-todo-card-border: hsl(49, 18%, 77%);
     --color-todo-card-done: hsl(100%, 30%, 30%);
-    --color-todo-card-done-background: hsl(60, 30%, 80%);
+    --color-todo-card-done-background: hsl(0, 0%, 86%);
     --color-active-project: #55ff44;
     --color-priority-high: red;
     --color-priority-normal: #55EE44;
@@ -90,7 +90,6 @@ body {
 }
 
 div.controls {
-    background-color: #f8f8bf99;
     padding: 15px 0;
     border-radius: 6px;
 }
@@ -110,6 +109,17 @@ div.controls {
     margin: 10px;    
 }
 
+input[type=text] {
+    background-color: var(--color-todo-card-background);
+    border-radius: 3px;
+    border: none;
+}
+
+input[type=text]:focus {
+    background-color: white;
+    border: none;
+}
+
 .todo-card {
     display: flex;
     flex-direction: column;
@@ -123,13 +133,26 @@ div.controls {
     display: block;
 }
 
-.todo-card:hover {
+.todo-done, .todo-done *, .todo-done input[type=text] {
+    background-color: var(--color-todo-card-done-background);
+}
+
+/* .todo-card:hover {
+    background-color: var(--color-todo-card-hover-background);
+} */
+
+/* .todo-card:hover .todo-card__expanded:not(.todo-done) {
     background-color: var(--color-todo-card-hover-background);
 }
 
-.todo-card:hover .todo-card__expanded {
-    background-color: var(--color-todo-card-hover-background);
+input[type=text].todo-card:hover:not(.todo-done) {
+    background-color: red;
 }
+
+.todo-card.todo-done, .todo-card__expanded.todo-done {
+    background-color: var(--color-todo-card-done-background);
+    color: var(--color-todo-card-done);
+} */
 
 .todo-card__basic {
     display: flex;
@@ -140,12 +163,15 @@ div.controls {
 
 .todo-card__expanded {
     display: flex;
-    align-items: center;
-    background-color: var(--color-todo-card-details-background);
+    align-items: center;    
     margin: 10px 3ch 5px 3ch;
     padding: 5px;
     font-size: 1rem;
     border-radius: 6px;
+}
+
+.todo-card__expanded:not(.todo-done) {
+    background-color: var(--color-todo-card-details-background);
 }
 
 div.detail-container {
@@ -173,7 +199,7 @@ div.detail-container > .fa-solid {
     accent-color: rgb(0, 117, 0);
 }
 
-.todo-card label {
+.todo-card input[type=text] {
     padding-left: 10px;
     flex-grow: 1;
 }
@@ -199,21 +225,17 @@ div.detail-container > .fa-solid {
 
 .todo-card .delete-item {
     margin-left: auto;
-    margin-right: auto;
+    padding-left: 6px;
+    /* margin-right: auto; */
     color: darkred;
 }
 
 .todo-card .expander {
-    margin-left: 6px;
+    padding-left: 10px;
     color: #00000099;
 }
 
-.todo-card.todo-done, .todo-card__expanded.todo-done {
-    background-color: var(--color-todo-card-done-background);
-    color: var(--color-todo-card-done);
-}
-
-.todo-done label {
+.todo-done input[type=text] {
     text-decoration: line-through;
 }
 

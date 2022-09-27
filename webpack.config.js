@@ -17,7 +17,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: './src/index.html',
             favicon: './src/assets/check.png',
-            title: 'TODOODLI'
+            title: 'TODOODLI',
         }),
         new webpack.ProgressPlugin(),
     ],

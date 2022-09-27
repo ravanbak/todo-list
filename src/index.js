@@ -32,15 +32,26 @@ const controller = (function() {
             _updatePage();
         });
 
-        pubSub.subscribe('addItem', () => {
-            const todoItem = todoList.addTodoItem(_activeProject, ' ', ' ', Date.now(), Priority.Normal, ' ')
-            todoItem.expanded = true;
+        pubSub.subscribe('addItem', data => {
+            const todoItem = todoList.addTodoItem(_activeProject, '', ' ', Date.now(), Priority.Normal, ' ', data.isPending)
+
+            _updatePage();
+        });
+
+        pubSub.subscribe('confirmItem', () => {
+            _activeProject?.confirmPendingTodoItem();
 
             _updatePage();
         });
 
         pubSub.subscribe('deleteItem', data => {
             todoList.deleteTodoItem(_activeProject, data.id);
+
+            _updatePage();
+        });
+
+        pubSub.subscribe('changeItem', data => {
+            todoList.changeTodoItem(_activeProject, data);
 
             _updatePage();
         });
