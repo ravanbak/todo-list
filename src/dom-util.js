@@ -1,4 +1,4 @@
-export function addElement(args) {
+export function createElement(args) {
     if (!args.tag) return;
 
     const el = document.createElement(args.tag);

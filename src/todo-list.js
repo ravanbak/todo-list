@@ -63,13 +63,13 @@ const todoList = (function() {
         return todoItem;
     }
 
-    function changeTodoItem(project, data) {
-        if (!project || !data.id) {
+    function changeTodoItem(project, modifiedTodoItem) {
+        if (!project || !modifiedTodoItem.id) {
             console.log('Project or todo item not found.');
             return false;
         }
 
-        return project.changeTodoItem(data);
+        return project.changeTodoItem(modifiedTodoItem);
     }
 
     function deleteTodoItem(project, id) {

@@ -113,11 +113,12 @@ input[type=text] {
     background-color: var(--color-todo-card-background);
     border-radius: 3px;
     border: none;
+    transition: 0.5s;
 }
 
 input[type=text]:focus {
     background-color: white;
-    border: none;
+    outline: none;
 }
 
 .todo-card {
@@ -129,8 +130,32 @@ input[type=text]:focus {
     margin: 5px;
 }
 
-.todo-card:hover .delete-item {
+.todo-card .delete-item, 
+.todo-card .item-menu,
+.todo-card .expander {
+    /* display: none; */
     display: block;
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.todo-card:hover .delete-item, 
+.todo-card:hover .item-menu,
+.todo-card:hover .expander {
+    /* display: block; */
+    opacity: 0.5;
+}
+
+.todo-card .delete-item:hover {
+    opacity: 1;
+}
+
+.todo-card .item-menu:hover {
+    opacity: 1;
+}
+
+.todo-card .expander:hover {
+    opacity: 1;
 }
 
 .todo-done, .todo-done *, .todo-done input[type=text] {
@@ -197,6 +222,7 @@ div.detail-container > .fa-solid {
     width: 2.2ch;
     height: 2.2ch;
     accent-color: rgb(0, 117, 0);
+    outline: none;
 }
 
 .todo-card input[type=text] {
@@ -211,7 +237,6 @@ div.detail-container > .fa-solid {
     min-width: 2.5ch;
     min-height: 2.5ch;
     border-radius: 3px;
-    color: greenyellow;
     background-color: var(--color-priority-normal);
 }
 
@@ -223,16 +248,19 @@ div.detail-container > .fa-solid {
     background-color: var(--color-priority-low);
 }
 
-.todo-card .delete-item {
+.todo-card .item-menu {
     margin-left: auto;
-    padding-left: 6px;
-    /* margin-right: auto; */
+    padding: 0 6px 0 12px;
+}
+
+.todo-card .delete-item {
+    padding: 0 6px 0 6px;
     color: darkred;
 }
 
 .todo-card .expander {
-    padding-left: 10px;
-    color: #00000099;
+    padding: 0 0 0 6px;
+    /* color: #00000099; */
 }
 
 .todo-done input[type=text] {

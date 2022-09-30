@@ -15,14 +15,14 @@ function createProject(name) {
         }
     }
 
-    function changeTodoItem(data) {
-        let item = getTodoItem(data.id);
+    function changeTodoItem(modifiedTodoItem) {
+        let item = getTodoItem(modifiedTodoItem.id);
         if (!item) {
-            console.log(`Item ${data?.id} not found in ${this.changeTodoItem.name}`);
+            console.log(`Item ${modifiedTodoItem?.id} not found in ${this.changeTodoItem.name}`);
             return item;
         }
         
-        item = Object.assign(item, data);
+        item = Object.assign(item, modifiedTodoItem);
 
         if (isPendingTodoItem(item)) {
             confirmPendingTodoItem();
