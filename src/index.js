@@ -33,7 +33,7 @@ const controller = (function() {
         });
 
         pubSub.subscribe('addItem', data => {
-            const todoItem = todoList.addTodoItem(_activeProject, '', ' ', Date.now(), Priority.Normal, ' ', data.isPending)
+            const todoItem = todoList.addTodoItem(_activeProject, '', '', Date.now(), Priority.Normal, '', data.isPending)
 
             _updatePage();
         });

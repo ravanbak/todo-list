@@ -228,16 +228,13 @@ const content = (function() {
         }
 
         function generateTodoCard(todoItem) {
-
             // Return a div containing a single todo item
             // showing the item's basic info. If the item has been 
-            // expanded, extended info will also be displayed.
+            // expanded, display details.
 
-            const divTodoCard = createElement({
-                tag: 'div',
-                classList: ['todo-card'],
-                id: todoItem.id,
-            });
+            const divTodoCard = createElement({tag: 'div',
+                                               classList: ['todo-card'],
+                                               id: todoItem.id});
             if (todoItem.isDone()) {
                 divTodoCard.classList.add('todo-done');
             }
@@ -254,31 +251,28 @@ const content = (function() {
             divTodoBasic.appendChild(_createMenuButton(todoItem));
             divTodoBasic.appendChild(_createDeleteButton(todoItem));
 
-            if (todoItem.hasDetails()) {
-                const arrow = createElement({
+            const arrow = createElement({
+                tag: 'div',
+                parent: divTodoBasic,
+                classList: ['expander', 'fa-solid'],
+            });
+            arrow.classList.add((todoItem?.expanded) ? 'fa-angle-up' : 'fa-angle-down');
+            arrow.addEventListener('click', () => _expandCollapseTodoItem(todoItem));
+            
+            if (todoItem?.expanded) {
+                // Expanded details container
+                const divTodoDetails = createElement({
                     tag: 'div',
-                    parent: divTodoBasic,
-                    classList: ['expander', 'fa-solid'],
+                    parent: divTodoCard,
+                    classList: ['todo-card__expanded'],
                 });
-                arrow.addEventListener('click', () => _expandCollapseTodoItem(todoItem));
 
-                arrow.classList.add((todoItem?.expanded) ? 'fa-angle-up' : 'fa-angle-down');
+                divTodoDetails.appendChild(_generateExpandedTodoItemContent(todoItem));
 
-                if (todoItem?.expanded) {
-                    // Expanded details container
-                    const divTodoDetails = createElement({
-                        tag: 'div',
-                        parent: divTodoCard,
-                        classList: ['todo-card__expanded'],
-                    });
-
-                    divTodoDetails.appendChild(_generateExpandedTodoItemContent(todoItem));
-
-                    if (todoItem.isDone()) {
-                        divTodoDetails.classList.add('todo-done');
-                    }
-                } 
-            }          
+                if (todoItem.isDone()) {
+                    divTodoDetails.classList.add('todo-done');
+                }
+            } 
 
             return divTodoCard;
         }
@@ -312,7 +306,7 @@ const content = (function() {
                 placeholder: args.field,
             });
             
-            if (!_activeProject?.isPendingTodoItem(todoItem) || todoItem[args.field]) {
+            if (!_activeProject?.isPendingTodoItem(todoItem) && todoItem[args.field]) {
                 textInput.value = todoItem[args.field];
             }
 
@@ -352,14 +346,14 @@ const content = (function() {
         function _generateExpandedTodoItemContent(todoItem) {
             const divExpanded = createElement({tag: 'div'});
 
+            let container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
+            createElement({
+                tag: 'div',
+                parent: container,
+                classList: ['fa-solid', 'fa-calendar-alt']
+            });
+            
             if (todoItem.dueDate) {
-                const container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
-                createElement({
-                    tag: 'div',
-                    parent: container,
-                    classList: ['fa-solid', 'fa-calendar-alt']
-                });
-
                 createElement({
                     tag: 'div',
                     parent: container,
@@ -367,8 +361,8 @@ const content = (function() {
                 });
             }
 
-            if (todoItem.desc) {
-                const container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
+            // if (todoItem.desc) {
+                container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
                 createElement({
                     tag: 'div',
                     parent: container,
@@ -376,10 +370,10 @@ const content = (function() {
                 });
 
                 container.appendChild(_createTextboxInput(todoItem, {field:'desc'}));
-            }
+            // }
 
-            if (todoItem.notes) {
-                const container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
+            // if (todoItem.notes) {
+                container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
                 createElement({
                     tag: 'div',
                     parent: container,
@@ -387,7 +381,7 @@ const content = (function() {
                 });
 
                 container.appendChild(_createTextboxInput(todoItem, {field:'notes'}));
-            }
+            // }
 
             return divExpanded;
         }
