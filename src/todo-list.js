@@ -41,14 +41,14 @@ const todoList = (function() {
         }
     }
 
-    function addTodoItem(project, title, desc, dueDate, priority, notes, isPending) {
+    function addTodoItem(project, title, description, dueDate, priority, notes, isPending) {
         if (!project) {
             console.log(`Project not found!`);
 
             return;
         }
 
-        const todoItem = itemModule.createTodoItem(title, desc, dueDate, priority, notes);
+        const todoItem = itemModule.createTodoItem(title, description, dueDate, priority, notes);
 
         project.addTodoItem(todoItem, isPending);
 

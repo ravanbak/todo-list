@@ -352,7 +352,8 @@ const content = (function() {
                 parent: container,
                 classList: ['fa-solid', 'fa-calendar-alt']
             });
-            
+
+            // Due date
             if (todoItem.dueDate) {
                 createElement({
                     tag: 'div',
@@ -361,27 +362,23 @@ const content = (function() {
                 });
             }
 
-            // if (todoItem.desc) {
-                container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
-                createElement({
-                    tag: 'div',
-                    parent: container,
-                    classList: ['fa-solid', 'fa-info-circle']
-                });
+            // Description
+            container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
+            createElement({
+                tag: 'div',
+                parent: container,
+                classList: ['fa-solid', 'fa-info-circle']
+            });
+            container.appendChild(_createTextboxInput(todoItem, {field:'description'}));
 
-                container.appendChild(_createTextboxInput(todoItem, {field:'desc'}));
-            // }
-
-            // if (todoItem.notes) {
-                container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
-                createElement({
-                    tag: 'div',
-                    parent: container,
-                    classList: ['fa-solid', 'fa-clipboard']
-                });
-
-                container.appendChild(_createTextboxInput(todoItem, {field:'notes'}));
-            // }
+            // Notes
+            container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
+            createElement({
+                tag: 'div',
+                parent: container,
+                classList: ['fa-solid', 'fa-clipboard']
+            });
+            container.appendChild(_createTextboxInput(todoItem, {field:'notes'}));
 
             return divExpanded;
         }

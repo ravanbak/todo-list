@@ -6,11 +6,11 @@ const Priority = Object.freeze({
     Low: -1,
 });
 
-function createTodoItem(title, desc, dueDate, priority = Priority.Normal, notes) {
+function createTodoItem(title, description, dueDate, priority = Priority.Normal, notes) {
     let _done = false;
 
     function hasDetails() {
-        return (this.desc || this.dueDate || this.notes);
+        return (this.description || this.dueDate || this.notes);
     }
 
     function toggleDone() {
@@ -23,7 +23,7 @@ function createTodoItem(title, desc, dueDate, priority = Priority.Normal, notes)
 
     return {
         title,
-        desc,
+        description,
         dueDate,
         priority,
         notes,
