@@ -142,23 +142,6 @@ const content = (function() {
         page?.replaceWith(_generatePage(_activeProject));
     }
 
-    function _setAllItemsExpandedState(todoItems, expanded) {
-        todoItems.forEach(el => el.expanded = expanded); 
-        
-        _updatePage();
-    }
-
-    function _createAddItemButton() {
-        // 'Add new todo item' button
-        const addItemButton = createElement({
-            tag: 'div',
-            classList: ['add-item', 'fa-solid', 'fa-xl', 'fa-plus-circle'],
-        });
-        addItemButton.addEventListener('click', () => pubSub.publish('addItem', { isPending: true }));
-
-        return addItemButton;
-    }
-
     function _generatePage(project) {
         // Return a div containing the active project's todo list.
 
@@ -174,24 +157,10 @@ const content = (function() {
             classList: ['controls']
         });
 
-        // 'Add new todo item' button
+        // Create main control buttons for todo list
         controlsContainer.appendChild(_createAddItemButton());
-        
-        // 'Expand all' button:
-        const expandAllButton = createElement({
-            tag: 'div',
-            parent: controlsContainer,
-            classList: ['expand-all', 'fa-solid', 'fa-xl', 'fa-angle-double-down'],
-        });
-        expandAllButton.addEventListener('click', () => _setAllItemsExpandedState(todoItems, true));
-
-        // 'Collapse all' button:
-        const collapseAllButton = createElement({
-            tag: 'div',
-            parent: controlsContainer,
-            classList: ['collapse-all', 'fa-solid', 'fa-xl', 'fa-angle-double-up'],
-        });
-        collapseAllButton.addEventListener('click', () => _setAllItemsExpandedState(todoItems, false));
+        controlsContainer.appendChild(_createExpandAllButton());
+        controlsContainer.appendChild(_createCollapseAllButton());
 
         // If there is a pending todo item (item added through UI but not 
         // yet accepted by the user), display it at the top of the page.
@@ -205,6 +174,43 @@ const content = (function() {
         }
         
         return page;
+
+        function _setAllItemsExpandedState(todoItems, expanded) {
+            todoItems.forEach(el => el.expanded = expanded); 
+            
+            _updatePage();
+        }
+
+        function _createExpandAllButton() {
+            const button = createElement({
+                tag: 'div',
+                classList: ['expand-all', 'fa-solid', 'fa-xl', 'fa-angle-double-down'],
+            });
+            button.addEventListener('click', () => _setAllItemsExpandedState(todoItems, true));
+
+            return button;
+        }
+        
+        function _createCollapseAllButton() {
+            const button = createElement({
+                tag: 'div',
+                classList: ['collapse-all', 'fa-solid', 'fa-xl', 'fa-angle-double-up'],
+            });
+            button.addEventListener('click', () => _setAllItemsExpandedState(todoItems, false));
+
+            return button;
+        }
+        
+        function _createAddItemButton() {
+            // 'Add new todo item' button
+            const addItemButton = createElement({
+                tag: 'div',
+                classList: ['add-item', 'fa-solid', 'fa-xl', 'fa-plus-circle'],
+            });
+            addItemButton.addEventListener('click', () => pubSub.publish('addItem', { isPending: true }));
+    
+            return addItemButton;
+        }        
     }
 
     const todoCardModule = (function() {
@@ -242,14 +248,7 @@ const content = (function() {
             divTodoBasic.appendChild(_createTextboxInput(todoItem, {field:'title'}));
             divTodoBasic.appendChild(_createMenuButton(todoItem));
             divTodoBasic.appendChild(_createDeleteButton(todoItem));
-
-            const arrow = createElement({
-                tag: 'div',
-                parent: divTodoBasic,
-                classList: ['expander', 'fa-solid'],
-            });
-            arrow.classList.add((todoItem?.expanded) ? 'fa-angle-up' : 'fa-angle-down');
-            arrow.addEventListener('click', () => _expandCollapseTodoItem(todoItem));
+            divTodoBasic.appendChild(_createExpanderButton(todoItem));
             
             if (todoItem?.expanded) {
                 // Expanded details container
@@ -267,64 +266,102 @@ const content = (function() {
             } 
 
             return divTodoCard;
-        }
+
+            function _createExpanderButton() {
+                const arrow = createElement({
+                    tag: 'div',
+                    classList: ['expander', 'fa-solid'],
+                });
+                arrow.classList.add((todoItem?.expanded) ? 'fa-angle-up' : 'fa-angle-down');
+                
+                arrow.addEventListener('click', () => _expandCollapseTodoItem(todoItem));
+
+                return arrow;
+            }
+
+            function _createCheckboxInput(todoItem) {
+                // Create checkbox container
+                const checkboxContainer = createElement({
+                    tag: 'div',
+                    classList: ['checkbox', _getPriorityClass(todoItem.priority)],
+                });
     
-        function _createCheckboxInput(todoItem) {
-            // Create checkbox container
-            const checkboxContainer = createElement({
-                tag: 'div',
-                classList: ['checkbox'],
-            });
-            checkboxContainer.classList.add(_getPriorityClass(todoItem.priority));
-
-            // Create checkbox input element
-            const checkboxInput = createElement({
-                tag: 'input',
-                type: 'checkbox',
-                parent: checkboxContainer,
-                name: todoItem.title,
-            });
-
-            checkboxInput.checked = todoItem.isDone();
-            checkboxInput.addEventListener('change', () => pubSub.publish('toggleItemDone', {id: todoItem.id}));
-
-            return checkboxContainer;
-        }
-
-        function _createTextboxInput(todoItem, args) {
-            const textInput = createElement({
-                tag: 'input',
-                type: 'text',
-                placeholder: args.field,
-            });
-            
-            if (!_activeProject?.isPendingTodoItem(todoItem) && todoItem[args.field]) {
-                textInput.value = todoItem[args.field];
+                // Create checkbox input element
+                const checkboxInput = createElement({
+                    tag: 'input',
+                    type: 'checkbox',
+                    parent: checkboxContainer,
+                    name: todoItem.title,
+                    checked: todoItem.isDone()
+                });
+    
+                // checkboxInput.checked = todoItem.isDone();
+                checkboxInput.addEventListener('change', () => pubSub.publish('toggleItemDone', {id: todoItem.id}));
+    
+                return checkboxContainer;
             }
 
-            textInput.addEventListener('change', (e) => pubSub.publish('changeItem', 
-                                                                       {id: todoItem.id, 
-                                                                        [args.field]: e.target.value}));
-
-            return textInput;
-        }
-
-        function _createDateInput(todoItem, args) {
-            const dateInput = createElement({
-                tag: 'input',
-                type: 'date',
-                value: todoItem.dueDate // 'MMM-dd-yy, hh:mmaaa'
-            });
-            
-            if (!_activeProject?.isPendingTodoItem(todoItem) && todoItem[args.field]) {
-                dateInput.value = todoItem[args.field];
+            function _createMenuButton(todoItem) {
+                const button = createElement({
+                    tag: 'div',
+                    classList: ['item-menu', 'fa-solid', 'fa-ellipsis-vertical', 'hide'],
+                });
+    
+                button.addEventListener('click', () => _showItemMenu(todoItem)); 
+    
+                return button;
             }
 
-            dateInput.addEventListener('change', (e) => pubSub.publish('changeItem', 
-                                                                       {id: todoItem.id, 
-                                                                        [args.field]: e.target.value}));
+            function _showItemMenu(todoItem) {
 
-            return dateInput;
+            }
+                
+            function _createDeleteButton(todoItem) {
+                const button = createElement({
+                    tag: 'div',
+                    classList: ['delete-item', 'fa-solid', 'fa-trash-can', 'hide'],
+                });
+    
+                button.addEventListener('click', () => pubSub.publish('deleteItem', {id: todoItem.id})); 
+    
+                return button;
+            }            
+        }
+
+        function _generateExpandedTodoItemContent(todoItem) {
+            const divExpanded = createElement({tag: 'div'});
+
+            // Due date
+            const dueDateContainer = divExpanded.appendChild(_createContainerWithIcon('calendar-alt'));
+            dueDateContainer.appendChild(_createDateInput(todoItem, {field:'dueDate'}));
+
+            // Description
+            const infoContainer = divExpanded.appendChild(_createContainerWithIcon('info-circle'));
+            infoContainer.appendChild(_createTextboxInput(todoItem, {field:'description'}));
+
+            // Notes
+            const notesContainer = divExpanded.appendChild(_createContainerWithIcon('clipboard'));
+            notesContainer.appendChild(_createTextboxInput(todoItem, {field:'notes'}));
+
+            return divExpanded;
+
+            function _createDateInput(todoItem, args) {
+                const dateInput = createElement({
+                    tag: 'input',
+                    type: 'date',
+                    value: todoItem.dueDate // 'MMM-dd-yy, hh:mmaaa'
+                });
+                
+                if (!_activeProject?.isPendingTodoItem(todoItem) && todoItem[args.field]) {
+                    dateInput.value = todoItem[args.field];
+                }
+    
+                dateInput.addEventListener('change', (e) => pubSub.publish('changeItem', 
+                                                                           {id: todoItem.id, 
+                                                                            [args.field]: e.target.value}));
+    
+                return dateInput;
+            }            
         }
 
         function _createContainerWithIcon(faIconName) {
@@ -337,50 +374,23 @@ const content = (function() {
 
             return container;
         }
-
-        function _createMenuButton(todoItem) {
-            const button = createElement({
-                tag: 'div',
-                classList: ['item-menu', 'fa-solid', 'fa-ellipsis-vertical', 'hide'],
+                
+        function _createTextboxInput(todoItem, args) {
+            const input = createElement({
+                tag: 'input',
+                type: 'text',
+                placeholder: args.field,
             });
+            
+            if (!_activeProject?.isPendingTodoItem(todoItem) && todoItem[args.field]) {
+                input.value = todoItem[args.field];
+            }
 
-            button.addEventListener('click', () => _showItemMenu(todoItem)); 
+            input.addEventListener('change', (e) => pubSub.publish('changeItem', 
+                                                                   {id: todoItem.id, 
+                                                                    [args.field]: e.target.value}));
 
-            return button;
-        }
-
-        function _showItemMenu(todoItem) {
-
-        }
-
-        function _createDeleteButton(todoItem) {
-            const button = createElement({
-                tag: 'div',
-                classList: ['delete-item', 'fa-solid', 'fa-trash-can', 'hide'],
-            });
-
-            button.addEventListener('click', () => pubSub.publish('deleteItem', {id: todoItem.id})); 
-
-            return button;
-        }
-
-        function _generateExpandedTodoItemContent(todoItem) {
-            const divExpanded = createElement({tag: 'div'});
-
-            // Due date
-            const dueDateContainer = divExpanded.appendChild(_createContainerWithIcon('calendar-alt'));
-            dueDateContainer.appendChild(_createDateInput(todoItem, {field:'dueDate'}));
-
-
-            // Description
-            const infoContainer = divExpanded.appendChild(_createContainerWithIcon('info-circle'));
-            infoContainer.appendChild(_createTextboxInput(todoItem, {field:'description'}));
-
-            // Notes
-            const notesContainer = divExpanded.appendChild(_createContainerWithIcon('clipboard'));
-            notesContainer.appendChild(_createTextboxInput(todoItem, {field:'notes'}));
-
-            return divExpanded;
+            return input;
         }
 
         return {

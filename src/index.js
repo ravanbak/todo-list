@@ -53,7 +53,7 @@ const controller = (function() {
         pubSub.subscribe('changeItem', data => {
             todoList.changeTodoItem(_activeProject, data);
 
-            _updatePage();
+            display.updateTodoItem(_activeProject.getTodoItem(data.id));
         });
 
         pubSub.subscribe('toggleItemDone', data => {
