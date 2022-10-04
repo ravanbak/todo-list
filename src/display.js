@@ -2,7 +2,6 @@ import * as pubSub from './pubsub';
 import { createElement, deleteAllChildren } from './dom-util';
 import { Priority } from './todo-item';
 import { compareAsc, format } from 'date-fns';
-// import { todoList } from './todo-list';
 
 const header = (function() {
     function generateHeader() {
@@ -29,52 +28,51 @@ const header = (function() {
     };
 })();
 
-const sidebar = (function() {
-    function generateSidebar(projects, activeProject) {
-        const sidebarContainer = createElement({
-            tag: 'div', 
-            classList: ['site__sidebar'],
-        });
-
-        const sidebar = createElement({
-            tag: 'div',
-            parent: sidebarContainer,
-            classList: ['container'],
-            textContent: 'Projects',
-        });
-
-        const list = createElement({
-            tag: 'ul',
-            parent: sidebar,
-        });
-
-        for (let i = 0; i < projects.length; i++) {
-            let li = createElement({
-                tag: 'li',
-                parent: list,
-                textContent: projects[i].name,
-            });
-
-            // hilight the active project
-            if (projects[i].name == activeProject.name) {
-                li.classList.add('active')
-            }
-
-            li.addEventListener('click', () => pubSub.publish('selectProject', { name: projects[i].name }));
-        }
-
-        return sidebarContainer;
-    }
-
-    return {
-        generateSidebar,
-    };
-})();
-
 const content = (function() {
     let _activeProject;
-    let _newTodoItem;
 
+    const sidebar = (function() {
+        function generateSidebar(projects) {
+            const sidebarContainer = createElement({
+                tag: 'div', 
+                classList: ['site__sidebar'],
+            });
+    
+            const sidebar = createElement({
+                tag: 'div',
+                parent: sidebarContainer,
+                classList: ['container'],
+                textContent: 'Projects',
+            });
+    
+            const list = createElement({
+                tag: 'ul',
+                parent: sidebar,
+            });
+    
+            for (let i = 0; i < projects.length; i++) {
+                let li = createElement({
+                    tag: 'li',
+                    parent: list,
+                    textContent: projects[i].name,
+                });
+    
+                // hilight the active project
+                if (projects[i].name === _activeProject.name) {
+                    li.classList.add('active')
+                }
+    
+                li.addEventListener('click', () => pubSub.publish('selectProject', { name: projects[i].name }));
+            }
+    
+            return sidebarContainer;
+        }
+    
+        return {
+            generateSidebar,
+        };
+    })();
+    
     const SortOrder = Object.freeze({
         Title: 0,
         Priority: 1,
@@ -90,25 +88,15 @@ const content = (function() {
     let sortDirection = SortDirection.Descending;
 
     function generateContent(projects, activeProject) {
-        
         // Generate the  sidebar and active todo list content and return
         // a div containing both.
 
         _activeProject = activeProject;
 
-        const pageContent = createElement({
-            tag: 'div', 
-            classList: ['container', 'site__content'],
-        });
-
+        const pageContent = createElement({tag: 'div', classList: ['container', 'site__content']});
         pageContent.appendChild(sidebar.generateSidebar(projects, _activeProject));
 
-        const pageContainer = createElement({
-            tag: 'div', 
-            parent: pageContent, 
-            classList: [ 'site__page' ],
-        });
-
+        const pageContainer = pageContent.appendChild(createElement({tag: 'div', classList: [ 'site__page' ]}));
         pageContainer.appendChild(_generatePage(_activeProject));
 
         return pageContent;
@@ -160,13 +148,22 @@ const content = (function() {
         _updatePage();
     }
 
-    function _generatePage(project) {
+    function _createAddItemButton() {
+        // 'Add new todo item' button
+        const addItemButton = createElement({
+            tag: 'div',
+            classList: ['add-item', 'fa-solid', 'fa-xl', 'fa-plus-circle'],
+        });
+        addItemButton.addEventListener('click', () => pubSub.publish('addItem', { isPending: true }));
 
+        return addItemButton;
+    }
+
+    function _generatePage(project) {
         // Return a div containing the active project's todo list.
 
-        const page = document.createElement('div');
-        page.classList.add('container', 'todo-list');
-        
+        const page = createElement({tag:'div', classList:['container', 'todo-list']});
+                
         const todoItems = _getSortedTodoItems(project);
         const pendingTodoItem = project.getPendingTodoItem();
 
@@ -178,12 +175,7 @@ const content = (function() {
         });
 
         // 'Add new todo item' button
-        const addItemButton = createElement({
-            tag: 'div',
-            parent: controlsContainer,
-            classList: ['add-item', 'fa-solid', 'fa-xl', 'fa-plus-circle'],
-        });
-        addItemButton.addEventListener('click', () => pubSub.publish('addItem', { isPending: true }));
+        controlsContainer.appendChild(_createAddItemButton());
         
         // 'Expand all' button:
         const expandAllButton = createElement({
@@ -278,14 +270,14 @@ const content = (function() {
         }
     
         function _createCheckboxInput(todoItem) {
-            // Add checkbox container
+            // Create checkbox container
             const checkboxContainer = createElement({
                 tag: 'div',
                 classList: ['checkbox'],
             });
             checkboxContainer.classList.add(_getPriorityClass(todoItem.priority));
 
-            // Add checkbox input element
+            // Create checkbox input element
             const checkboxInput = createElement({
                 tag: 'input',
                 type: 'checkbox',
@@ -317,6 +309,35 @@ const content = (function() {
             return textInput;
         }
 
+        function _createDateInput(todoItem, args) {
+            const dateInput = createElement({
+                tag: 'input',
+                type: 'date',
+                value: todoItem.dueDate // 'MMM-dd-yy, hh:mmaaa'
+            });
+            
+            if (!_activeProject?.isPendingTodoItem(todoItem) && todoItem[args.field]) {
+                dateInput.value = todoItem[args.field];
+            }
+
+            dateInput.addEventListener('change', (e) => pubSub.publish('changeItem', 
+                                                                       {id: todoItem.id, 
+                                                                        [args.field]: e.target.value}));
+
+            return dateInput;
+        }
+
+        function _createContainerWithIcon(faIconName) {
+            // Create a div with the specified FA character icon as its child element.
+
+            const container = createElement({tag: 'div', classList:['detail-container']});
+            container.appendChild(createElement({tag: 'div', 
+                                                 classList: ['fa-solid', 
+                                                             `fa-${faIconName}`]}));
+
+            return container;
+        }
+
         function _createMenuButton(todoItem) {
             const button = createElement({
                 tag: 'div',
@@ -346,39 +367,18 @@ const content = (function() {
         function _generateExpandedTodoItemContent(todoItem) {
             const divExpanded = createElement({tag: 'div'});
 
-            let container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
-            createElement({
-                tag: 'div',
-                parent: container,
-                classList: ['fa-solid', 'fa-calendar-alt']
-            });
-
             // Due date
-            if (todoItem.dueDate) {
-                createElement({
-                    tag: 'div',
-                    parent: container,
-                    textContent: format(todoItem.dueDate, 'MMM-dd-yy, hh:mmaaa'),
-                });
-            }
+            const dueDateContainer = divExpanded.appendChild(_createContainerWithIcon('calendar-alt'));
+            dueDateContainer.appendChild(_createDateInput(todoItem, {field:'dueDate'}));
+
 
             // Description
-            container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
-            createElement({
-                tag: 'div',
-                parent: container,
-                classList: ['fa-solid', 'fa-info-circle']
-            });
-            container.appendChild(_createTextboxInput(todoItem, {field:'description'}));
+            const infoContainer = divExpanded.appendChild(_createContainerWithIcon('info-circle'));
+            infoContainer.appendChild(_createTextboxInput(todoItem, {field:'description'}));
 
             // Notes
-            container = createElement({tag: 'div', parent: divExpanded, classList:['detail-container']});
-            createElement({
-                tag: 'div',
-                parent: container,
-                classList: ['fa-solid', 'fa-clipboard']
-            });
-            container.appendChild(_createTextboxInput(todoItem, {field:'notes'}));
+            const notesContainer = divExpanded.appendChild(_createContainerWithIcon('clipboard'));
+            notesContainer.appendChild(_createTextboxInput(todoItem, {field:'notes'}));
 
             return divExpanded;
         }
