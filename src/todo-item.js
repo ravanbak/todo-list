@@ -22,12 +22,12 @@ function createTodoItem(title, description, dueDate, priority = Priority.Normal,
     }
 
     return {
+        'id': 'id' + uuidv4(),
         title,
         description,
         dueDate,
         priority,
         notes,
-        'id': 'id' + uuidv4(),
         hasDetails,
         isDone,
         toggleDone,

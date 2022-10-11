@@ -49,14 +49,15 @@ const content = (function() {
                         tag: 'li',
                         parent: list,
                         textContent: projects[i].name,
+                        id: projects[i].id
                     });
         
                     // hilight the active project
-                    if (projects[i].name === _activeProject.name) {
+                    if (projects[i].id === _activeProject?.id) {
                         li.classList.add('active')
                     }
                     
-                    li.addEventListener('click', () => pubSub.publish('selectProject', { name: projects[i].name }));
+                    li.addEventListener('click', () => pubSub.publish('selectProject', { id: projects[i].id }));
                 }
 
                 return list;

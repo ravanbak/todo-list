@@ -17,11 +17,11 @@ const todoList = (function() {
         }
     }
 
-    function deleteProject(projectName) {
-        const idx = _projects.findIndex((p) => p.name === projectName );
+    function deleteProject(projectID) {
+        const idx = _projects.findIndex((p) => p.id === projectID );
 
         if (idx < 0) {
-            console.log(`Project "${projectName}" not found!`);
+            console.log('Project not found!');
         } 
         else {
             _projects.splice(idx, 1);
@@ -30,11 +30,11 @@ const todoList = (function() {
         return (idx > -1);
     }
 
-    function getProject(projectName) {
-        const idx = _projects.findIndex((p) => p.name === projectName );
+    function getProject(projectID) {
+        const idx = _projects.findIndex(p => p.id === projectID);
 
         if (idx < 0) {
-            console.log(`Project "${projectName}" not found!`);
+            console.log('Project not found!');
         }
         else {
             return _projects[idx];

@@ -1,3 +1,5 @@
+import { v4 as uuidv4, v4 } from 'uuid';
+
 function createProject(name) {
     let _todoItems = [];
     let _pendingTodoItem; // todo item added through UI and not yet confirmed
@@ -87,6 +89,7 @@ function createProject(name) {
     }
 
     return {
+        'id': 'id' + uuidv4(),
         name,
         addTodoItem,
         changeTodoItem,

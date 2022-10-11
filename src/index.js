@@ -6,11 +6,13 @@ import { Priority } from "./todo-item";
 
 const controller = (function() {
     const _DEFAULT_PROJECT_NAME = 'To Do';
+    let _DEFAULT_PROJECT_ID;
 
     let _activeProject;
 
     const init = (function() {
         _activeProject = todoList.addProject(_DEFAULT_PROJECT_NAME);
+        _DEFAULT_PROJECT_ID = _activeProject.id;
 
         pubSub.subscribe('addProject', data => {
             _activeProject = todoList.addProject(data.name);
@@ -19,7 +21,7 @@ const controller = (function() {
         });
         
         pubSub.subscribe('deleteProject', data => {
-            if (!todoList.deleteProject(data.projectName)) {
+            if (!todoList.deleteProject(data.id)) {
                 return;
             }
             
@@ -27,7 +29,7 @@ const controller = (function() {
         });
         
         pubSub.subscribe('selectProject', data => { 
-            _activeProject = todoList.getProject(data.name);
+            _activeProject = todoList.getProject(data.id);
 
             _updatePage();
         });
@@ -70,7 +72,7 @@ const controller = (function() {
     }
 
     const createTestData = (function() {
-        const project = todoList.getProject(_DEFAULT_PROJECT_NAME);
+        const project = todoList.getProject(_DEFAULT_PROJECT_ID);
         todoList.addTodoItem(project, 'finish this project', 'this project is a todo list', '2022-10-09', Priority.High, 'check the box when done');
         todoList.addTodoItem(project, 'add button to expand/collapse all todo items');
         todoList.addTodoItem(project, 'add box shadows', 'cross off', '', Priority.Low);
@@ -109,6 +111,9 @@ const controller = (function() {
         todoList.addTodoItem(yard, 'set up sprinkler');
     })();
 
+    return {
+        defaultProjectID: _DEFAULT_PROJECT_ID,
+    }
 })();
 
-display.renderSite(todoList.getProjects(), todoList.getProject('To Do'));
+display.renderSite(todoList.getProjects(), todoList.getProject(controller.defaultProjectID));
