@@ -33,39 +33,51 @@ const content = (function() {
 
     const sidebar = (function() {
         function generateSidebar(projects) {
-            const sidebarContainer = createElement({
-                tag: 'div', 
-                classList: ['site__sidebar'],
-            });
+            const sidebarContainer = createElement({tag: 'div', classList: ['site__sidebar']});
     
-            const sidebar = createElement({
-                tag: 'div',
-                parent: sidebarContainer,
-                classList: ['container'],
-                textContent: 'Projects',
-            });
-    
-            const list = createElement({
-                tag: 'ul',
-                parent: sidebar,
-            });
-    
-            for (let i = 0; i < projects.length; i++) {
-                let li = createElement({
-                    tag: 'li',
-                    parent: list,
-                    textContent: projects[i].name,
-                });
-    
-                // hilight the active project
-                if (projects[i].name === _activeProject.name) {
-                    li.classList.add('active')
-                }
-    
-                li.addEventListener('click', () => pubSub.publish('selectProject', { name: projects[i].name }));
-            }
-    
+            const sidebar = _addSidebarElement();   
+            sidebar.appendChild(_addProjectList());
+            sidebar.appendChild(_addAddProjectButton());
+            
             return sidebarContainer;
+            
+            function _addProjectList() {
+                const list = createElement({tag: 'ul'});
+                
+                for (let i = 0; i < projects.length; i++) {
+                    let li = createElement({
+                        tag: 'li',
+                        parent: list,
+                        textContent: projects[i].name,
+                    });
+        
+                    // hilight the active project
+                    if (projects[i].name === _activeProject.name) {
+                        li.classList.add('active')
+                    }
+                    
+                    li.addEventListener('click', () => pubSub.publish('selectProject', { name: projects[i].name }));
+                }
+
+                return list;
+            }
+            
+            function _addAddProjectButton() {
+                const addProjectButton = createElement({tag: 'div', classList: ['add-project']});
+                addProjectButton.appendChild(createElement({tag: 'div', classList: ['fa-solid', 'fa-xl', 'fa-plus-circle']}));
+                addProjectButton.addEventListener('click', () => pubSub.publish('addProject', {name: 'New Project'}));
+                
+                return addProjectButton;
+            }
+
+            function _addSidebarElement() {
+                return createElement({
+                    tag: 'div',
+                    parent: sidebarContainer,
+                    classList: ['container'],
+                    textContent: 'Projects',
+                });
+            }
         }
     
         return {
@@ -349,7 +361,7 @@ const content = (function() {
                 const dateInput = createElement({
                     tag: 'input',
                     type: 'date',
-                    value: todoItem.dueDate // 'MMM-dd-yy, hh:mmaaa'
+                    value: todoItem.dueDate
                 });
                 
                 if (!_activeProject?.isPendingTodoItem(todoItem) && todoItem[args.field]) {
@@ -374,7 +386,7 @@ const content = (function() {
 
             return container;
         }
-                
+
         function _createTextboxInput(todoItem, args) {
             const input = createElement({
                 tag: 'input',
@@ -456,7 +468,7 @@ const footer = (function() {
 
 const display = (function() {
     function renderSite(projects, activeProject) {
-        // Render entire site (including header and footer).
+        // Render site (including header and footer).
 
         deleteAllChildren('div#site');
 
