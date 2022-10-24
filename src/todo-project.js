@@ -56,7 +56,7 @@ function createProject(name) {
     function getTodoItem(id) {
         let item = _todoItems.find(el => el.id === id);
         
-        if (!item && id === _pendingTodoItem.id) {
+        if (!item && id === _pendingTodoItem?.id) {
             item = _pendingTodoItem;
         }
         

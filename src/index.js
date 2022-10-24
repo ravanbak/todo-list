@@ -11,13 +11,13 @@ const controller = (function() {
     let _activeProject;
 
     const init = (function() {
-        _activeProject = todoList.addProject(_DEFAULT_PROJECT_NAME);
+        _setActiveProject(todoList.addProject(_DEFAULT_PROJECT_NAME).id);
         _DEFAULT_PROJECT_ID = _activeProject.id;
 
         pubSub.subscribe('addProject', data => {
             _activeProject = todoList.addProject(data.name);
 
-            _updatePage();
+            _updateContent();
         });
         
         pubSub.subscribe('deleteProject', data => {
@@ -25,31 +25,30 @@ const controller = (function() {
                 return;
             }
             
-            _updatePage();
+            _updateContent();
         });
         
         pubSub.subscribe('selectProject', data => { 
-            _activeProject = todoList.getProject(data.id);
-
-            _updatePage();
+            _setActiveProject(data.id);
+            display.updatePage();
         });
 
         pubSub.subscribe('addItem', data => {
             const todoItem = todoList.addTodoItem(_activeProject, '', '', Date.now(), Priority.Normal, '', data.isPending)
 
-            _updatePage();
+            display.updatePage();
         });
 
         pubSub.subscribe('confirmItem', () => {
             _activeProject?.confirmPendingTodoItem();
 
-            _updatePage();
+            display.updatePage();
         });
 
         pubSub.subscribe('deleteItem', data => {
             todoList.deleteTodoItem(_activeProject, data.id);
 
-            _updatePage();
+            display.updatePage();
         });
 
         pubSub.subscribe('changeItem', data => {
@@ -58,16 +57,28 @@ const controller = (function() {
             display.updateTodoItem(_activeProject.getTodoItem(data.id));
         });
 
+        pubSub.subscribe('changeProject', data => {
+            todoList.changeProject(data);
+
+            display.updateProject(todoList.getProject(data.id));
+        });
+
         pubSub.subscribe('toggleItemDone', data => {
             const todoItem = todoList.toggleTodoItemDone(_activeProject, data.id);
 
             display.updateTodoItem(todoItem);
         });
 
-        _updatePage();
+        _updateContent();
     })();
 
-    function _updatePage() {
+    function _setActiveProject(id) {
+        _activeProject = todoList.getProject(id)
+        display.setActiveProject(_activeProject);
+    }
+
+    function _updateContent() {
+        // Update sidebar and page.
         display.updateContent(todoList.getProjects(), _activeProject);
     }
 

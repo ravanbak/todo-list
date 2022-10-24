@@ -58,22 +58,30 @@ body {
     font-size: 1rem;
     font-weight: bold;
     text-align: center;
+    /* width: fit-content; */
 }
 
-.site__sidebar ul {
+.site__sidebar .projects-container {
+    display: flex;
+    flex-direction: column;
     font-weight: normal;
-    list-style-type: none;
-    padding: 0 5px 0 5px;
+    padding: 5px 5px 0 5px;
+}
+
+.site__sidebar .project-container {
+    display: flex;
+    align-items: center;
+}
+
+.site__sidebar input {
+    padding: 10px 15px;
+    border-radius: 6px;
     text-align: right;
 }
 
-.site__sidebar li {
+.site__sidebar .project-container.active {
     padding: 10px 15px;
     border-radius: 6px;
-    width: auto;
-}
-
-.site__sidebar .active {
     background-color: var(--color-active-project);
 }
 
@@ -130,31 +138,20 @@ input[type=text]:focus {
     margin: 5px;
 }
 
-.todo-card .delete-item, 
-.todo-card .item-menu,
-.todo-card .expander {
-    /* display: none; */
+.show-on-hover
+{
     display: block;
     opacity: 0;
     transition: 0.3s;
 }
 
-.todo-card:hover .delete-item, 
-.todo-card:hover .item-menu,
-.todo-card:hover .expander {
-    /* display: block; */
-    opacity: 0.5;
+.todo-card:hover .show-on-hover,
+.project-container:hover .show-on-hover {
+    opacity: 0.333;
 }
 
-.todo-card .delete-item:hover {
-    opacity: 1;
-}
-
-.todo-card .item-menu:hover {
-    opacity: 1;
-}
-
-.todo-card .expander:hover {
+.project-container .show-on-hover:hover,
+.todo-card .show-on-hover:hover {
     opacity: 1;
 }
 

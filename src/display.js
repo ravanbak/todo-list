@@ -2,6 +2,7 @@ import * as pubSub from './pubsub';
 import { createElement, deleteAllChildren } from './dom-util';
 import { Priority } from './todo-item';
 import { compareAsc, format } from 'date-fns';
+import { todoList } from './todo-list';
 
 const header = (function() {
     function generateHeader() {
@@ -33,56 +34,106 @@ const content = (function() {
 
     const sidebar = (function() {
         function generateSidebar(projects) {
-            const sidebarContainer = createElement({tag: 'div', classList: ['site__sidebar']});
+            const sidebarContainer = createElement({ tag: 'div', classList: ['site__sidebar'] });
     
-            const sidebar = _addSidebarElement();   
+            const sidebar = _addSidebarElement();
             sidebar.appendChild(_addProjectList());
             sidebar.appendChild(_addAddProjectButton());
             
+            sidebarContainer.appendChild(sidebar);
+
             return sidebarContainer;
-            
+
+            function _addSidebarElement() {
+                return createElement({
+                    tag: 'div',
+                    classList: ['container'],
+                    textContent: 'Projects',
+                });
+            }
+
             function _addProjectList() {
-                const list = createElement({tag: 'ul'});
+                const projectsContainer = createElement({tag: 'div', classList: ['projects-container']});
                 
                 for (let i = 0; i < projects.length; i++) {
-                    let li = createElement({
-                        tag: 'li',
-                        parent: list,
-                        textContent: projects[i].name,
-                        id: projects[i].id
-                    });
-        
-                    // hilight the active project
-                    if (projects[i].id === _activeProject?.id) {
-                        li.classList.add('active')
-                    }
-                    
-                    li.addEventListener('click', () => pubSub.publish('selectProject', { id: projects[i].id }));
+                    projectsContainer.appendChild(generateProjectItem(projects[i]));
                 }
 
-                return list;
+                return projectsContainer;
             }
-            
+
             function _addAddProjectButton() {
                 const addProjectButton = createElement({tag: 'div', classList: ['add-project']});
                 addProjectButton.appendChild(createElement({tag: 'div', classList: ['fa-solid', 'fa-xl', 'fa-plus-circle']}));
                 addProjectButton.addEventListener('click', () => pubSub.publish('addProject', {name: 'New Project'}));
                 
                 return addProjectButton;
-            }
+            }            
+        }
+            
+        function generateProjectItem(project) {
+            const inputContainer = createElement({
+                tag: 'div', 
+                classList: ['project-container'],
+                id: project.id,
+            });
 
-            function _addSidebarElement() {
+            const editButton = _createEditButton(project);
+            inputContainer.appendChild(editButton);
+
+            const input = createElement({
+                tag: 'input',
+                type: 'text',
+                parent: inputContainer,
+                placeholder: '<project name>',
+                value: project.name,
+            });
+
+            editButton.addEventListener('click', e => _editProjectName(e, project, input, inputContainer));
+            input.addEventListener('mousedown', _handleMouseDown);
+            input.addEventListener('change', e => _acceptProjectName(e, project, inputContainer));
+            
+            // hilight the active project
+            if (project.id === _activeProject?.id) {
+                inputContainer.classList.add('active')
+            }
+            
+            inputContainer.addEventListener('click', _selectProject);
+
+            return inputContainer;
+
+            function _handleMouseDown(e) {
+                e.preventDefault();
+            }
+    
+            function _editProjectName(e, project, input, inputContainer) {
+                inputContainer.removeEventListener('click', () => _selectProject);
+                input.removeEventListener('mousedown', _handleMouseDown);
+                input.focus(); 
+                input.select(); 
+                e.stopPropagation();
+            }
+    
+            function _acceptProjectName(e, project, inputContainer) {
+                pubSub.publish('changeProject', { id: project.id, name: e.target.value })
+                inputContainer.addEventListener('click', () => _selectProject);
+            }
+    
+            function _selectProject() {
+                pubSub.publish('selectProject', { id: project.id });
+            }
+            
+            function _createEditButton(project) {
                 return createElement({
                     tag: 'div',
-                    parent: sidebarContainer,
-                    classList: ['container'],
-                    textContent: 'Projects',
+                    classList: ['edit-project', 'fa-solid', 'fa-pen', 'hide', 'show-on-hover'],
                 });
-            }
+            }            
         }
     
         return {
             generateSidebar,
+            generateProjectItem,
         };
     })();
     
@@ -150,7 +201,7 @@ const content = (function() {
         return items;
     }
 
-    function _updatePage() {
+    function updatePage() {
         const page = document.querySelector('.todo-list');
         page?.replaceWith(_generatePage(_activeProject));
     }
@@ -191,7 +242,7 @@ const content = (function() {
         function _setAllItemsExpandedState(todoItems, expanded) {
             todoItems.forEach(el => el.expanded = expanded); 
             
-            _updatePage();
+            updatePage();
         }
 
         function _createExpandAllButton() {
@@ -283,7 +334,7 @@ const content = (function() {
             function _createExpanderButton() {
                 const arrow = createElement({
                     tag: 'div',
-                    classList: ['expander', 'fa-solid'],
+                    classList: ['expander', 'fa-solid', 'show-on-hover'],
                 });
                 arrow.classList.add((todoItem?.expanded) ? 'fa-angle-up' : 'fa-angle-down');
                 
@@ -317,7 +368,7 @@ const content = (function() {
             function _createMenuButton(todoItem) {
                 const button = createElement({
                     tag: 'div',
-                    classList: ['item-menu', 'fa-solid', 'fa-ellipsis-vertical', 'hide'],
+                    classList: ['item-menu', 'fa-solid', 'fa-ellipsis-vertical', 'hide', 'show-on-hover'],
                 });
     
                 button.addEventListener('click', () => _showItemMenu(todoItem)); 
@@ -332,7 +383,7 @@ const content = (function() {
             function _createDeleteButton(todoItem) {
                 const button = createElement({
                     tag: 'div',
-                    classList: ['delete-item', 'fa-solid', 'fa-trash-can', 'hide'],
+                    classList: ['delete-item', 'fa-solid', 'fa-trash-can', 'hide', 'show-on-hover'],
                 });
     
                 button.addEventListener('click', () => pubSub.publish('deleteItem', {id: todoItem.id})); 
@@ -416,6 +467,24 @@ const content = (function() {
         document.querySelector('#' + todoItem.id)?.replaceWith(newTodoCard);
     }
 
+    function setActiveProject(project) {
+        _activeProject = project;
+        
+        const projects = todoList.getProjects();
+        for (let i = 0; i < projects.length; i++) {
+            document.querySelector(`#${projects[i].id}`)?.classList.remove('active');
+        }
+        
+        document.querySelector(`#${project.id}`)?.classList.add('active');
+    }
+
+    function updateProject(project) {
+        const newProjectElement = sidebar.generateProjectItem(project);
+        document.querySelector('#' + project.id)?.replaceWith(newProjectElement);
+
+        setActiveProject(_activeProject);
+    }
+
     function _expandCollapseTodoItem(todoItem) {
         todoItem.expanded = !todoItem.expanded;
 
@@ -425,6 +494,9 @@ const content = (function() {
     return {
         generateContent,
         updateTodoItem,
+        updateProject,
+        setActiveProject,
+        updatePage,
     };
 })();
 
@@ -496,6 +568,9 @@ const display = (function() {
         updateContent,
         showMessage,
         updateTodoItem: content.updateTodoItem,
+        updateProject: content.updateProject,
+        setActiveProject: content.setActiveProject,
+        updatePage: content.updatePage
     };
 })();
 

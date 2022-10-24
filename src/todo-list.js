@@ -1,3 +1,14 @@
+// TO DO
+// 
+// - add project button
+// - delete project
+// 
+// - input todo item date
+// 
+// - local storage
+// 
+// - styling
+
 import * as projectModule from './todo-project';
 import * as itemModule from './todo-item';
 
@@ -28,6 +39,17 @@ const todoList = (function() {
         }
         
         return (idx > -1);
+    }
+
+    function changeProject(data) {
+        const idx = _projects.findIndex(p => p.id === data.id);
+
+        if (idx < 0) {
+            console.log('Project not found!');
+        }
+        else {
+            return Object.assign(_projects[idx], data);
+        }
     }
 
     function getProject(projectID) {
@@ -84,6 +106,7 @@ const todoList = (function() {
     return {
         addProject,
         deleteProject,
+        changeProject,
         getProject,
         getProjects,
         getProjectNames,
