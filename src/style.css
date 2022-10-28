@@ -55,33 +55,48 @@ body {
 .site__sidebar {
     padding: 10px;
     border-right: solid 1px var(--color-todo-card-border);
-    font-size: 1rem;
     font-weight: bold;
     text-align: center;
-    /* width: fit-content; */
+    width: fit-content;
+}
+
+.site__sidebar .container {
+    font-size: 2rem;
 }
 
 .site__sidebar .projects-container {
     display: flex;
     flex-direction: column;
-    font-weight: normal;
-    padding: 5px 5px 0 5px;
+    font-size: 1rem;
+    padding: 25px 5px 30px 5px;
 }
 
 .site__sidebar .project-container {
     display: flex;
-    align-items: center;
+    padding: 10px 25px;
+    border-radius: 6px;
+    align-items: right;
+    justify-content: right;
+    text-align: right;
+    /* box-sizing: border-box; */
 }
 
-.site__sidebar input {
-    padding: 10px 15px;
-    border-radius: 6px;
+.site__sidebar .edit-project {
+    padding-right: 5px;
+}
+
+.projects-container input[type=text] {
+    flex-grow: 1;
+    size: 100;
+    font-size: 1rem;
     text-align: right;
+    background-color: aqua;
+    width: 90%;
+    height: 100%;
+    border: 0;
 }
 
 .site__sidebar .project-container.active {
-    padding: 10px 15px;
-    border-radius: 6px;
     background-color: var(--color-active-project);
 }
 
@@ -117,16 +132,19 @@ div.controls {
     margin: 10px;    
 }
 
-input[type=text] {
+.todo-card input[type=text] {
     background-color: var(--color-todo-card-background);
     border-radius: 3px;
     border: none;
     transition: 0.5s;
+    /* width: inherit; */
+    size: 10;
 }
 
-input[type=text]:focus {
+.todo-card input[type=text]:focus {
     background-color: white;
     outline: none;
+    size: 5;
 }
 
 .todo-card {

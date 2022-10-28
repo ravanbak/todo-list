@@ -64,7 +64,7 @@ const content = (function() {
 
             function _addAddProjectButton() {
                 const addProjectButton = createElement({tag: 'div', classList: ['add-project']});
-                addProjectButton.appendChild(createElement({tag: 'div', classList: ['fa-solid', 'fa-xl', 'fa-plus-circle']}));
+                addProjectButton.appendChild(createElement({tag: 'div', classList: ['fa-solid', 'fa-plus-circle']}));
                 addProjectButton.addEventListener('click', () => pubSub.publish('addProject', {name: 'New Project'}));
                 
                 return addProjectButton;
@@ -81,17 +81,27 @@ const content = (function() {
             const editButton = _createEditButton(project);
             inputContainer.appendChild(editButton);
 
-            const input = createElement({
-                tag: 'input',
-                type: 'text',
+            // Show the project name in a div element and temporarily 
+            // replace the div element with a text input element
+            // when the user chooses to edit the project name.
+            const divProjName = createElement({
+                tag: 'div',
                 parent: inputContainer,
-                placeholder: '<project name>',
-                value: project.name,
+                textContent: project.name,
+                classList: ['project-name'],
             });
 
-            editButton.addEventListener('click', e => _editProjectName(e, project, input, inputContainer));
-            input.addEventListener('mousedown', _handleMouseDown);
-            input.addEventListener('change', e => _acceptProjectName(e, project, inputContainer));
+            const inputProjName = createElement({
+                tag: 'input',
+                type: 'text',
+                placeholder: '<project name>',
+                value: project.name,
+                classList: ['project-name'],
+            });            
+
+            editButton.addEventListener('click', e => _editProjectName(e));
+            inputProjName.addEventListener('change', e => _acceptProjectName(e));
+            inputProjName.addEventListener('focusout', e => _finishEditProjectName(e));
             
             // hilight the active project
             if (project.id === _activeProject?.id) {
@@ -102,25 +112,27 @@ const content = (function() {
 
             return inputContainer;
 
-            function _handleMouseDown(e) {
-                e.preventDefault();
-            }
-    
-            function _editProjectName(e, project, input, inputContainer) {
-                inputContainer.removeEventListener('click', () => _selectProject);
-                input.removeEventListener('mousedown', _handleMouseDown);
-                input.focus(); 
-                input.select(); 
-                e.stopPropagation();
-            }
-    
-            function _acceptProjectName(e, project, inputContainer) {
-                pubSub.publish('changeProject', { id: project.id, name: e.target.value })
-                inputContainer.addEventListener('click', () => _selectProject);
-            }
-    
             function _selectProject() {
                 pubSub.publish('selectProject', { id: project.id });
+            }
+    
+            function _editProjectName(e) {
+                divProjName.replaceWith(inputProjName);
+                inputProjName.focus(); 
+                inputProjName.select(); 
+            }
+    
+            function _acceptProjectName(e) {
+                if (!e.target.value) {
+                    console.log('Invalid project name!');
+                    return;
+                }
+
+                pubSub.publish('changeProject', { id: project.id, name: e.target.value })
+            }
+
+            function _finishEditProjectName(e) {
+                inputProjName.replaceWith(divProjName);                
             }
             
             function _createEditButton(project) {
