@@ -2,7 +2,8 @@
     --color-content-background: hsl(60, 100%, 96%);
     --color-todo-card-background: hsl(60, 100%, 92%);
     --color-todo-card-hover-background: hsl(60, 100%, 82%);
-    --color-todo-card-details-background: hsl(60, 100%, 90%);
+    --color-todo-card-details-background: hsl(60, 100%, 95%);
+    /* --color-todo-card-details-background: hsl(60, 100%, 90%); */
     --color-todo-card-border: hsl(49, 18%, 77%);
     --color-todo-card-done: hsl(100%, 30%, 30%);
     --color-todo-card-done-background: hsl(0, 0%, 86%);
@@ -57,7 +58,7 @@ body {
     border-right: solid 1px var(--color-todo-card-border);
     font-weight: bold;
     text-align: center;
-    width: fit-content;
+    min-width: 250px;
 }
 
 .site__sidebar .container {
@@ -69,6 +70,10 @@ body {
     flex-direction: column;
     font-size: 1rem;
     padding: 25px 5px 30px 5px;
+    margin: 20px 0;
+    background-color: var(--color-todo-card-background);
+    border: solid 1px var(--color-todo-card-border);
+    border-radius: 6px;
 }
 
 .site__sidebar .project-container {
@@ -78,7 +83,6 @@ body {
     align-items: right;
     justify-content: right;
     text-align: right;
-    /* box-sizing: border-box; */
 }
 
 .site__sidebar .edit-project {
@@ -86,12 +90,12 @@ body {
 }
 
 .projects-container input[type=text] {
-    flex-grow: 1;
-    size: 100;
+    /* flex-grow: 1; */
+    /* size: 100; */
     font-size: 1rem;
     text-align: right;
-    background-color: aqua;
-    width: 90%;
+    /* background-color: rgb(43, 162, 236); */
+    width: 200px;
     height: 100%;
     border: 0;
 }
@@ -133,7 +137,8 @@ div.controls {
 }
 
 .todo-card input[type=text] {
-    background-color: var(--color-todo-card-background);
+    /* background-color: var(--color-todo-card-background); */
+    background-color: inherit;
     border-radius: 3px;
     border: none;
     transition: 0.5s;
@@ -145,6 +150,11 @@ div.controls {
     background-color: white;
     outline: none;
     size: 5;
+}
+
+.todo-card input[type=date] {
+    background-color: inherit;
+    border: none;
 }
 
 .todo-card {

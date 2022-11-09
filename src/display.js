@@ -482,7 +482,7 @@ const content = (function() {
                 }
 
                 input.addEventListener('change', (e) => pubSub.publish('changeItem', 
-                                                                    {id: todoItem.id, 
+                                                                       {id: todoItem.id, 
                                                                         [args.field]: e.target.value}));
 
                 return input;
