@@ -44,7 +44,12 @@ const content = (function() {
         // Generate the sidebar and active todo list content and return
         // a div containing both.
 
-        _activeProject = activeProject;
+        if (activeProject) {
+            _activeProject = activeProject;
+        }
+        else {
+            _activeProject = projects[0];
+        }
 
         const pageContent = createElement({tag: 'div', classList: ['container', 'site__content']});
         pageContent.appendChild(sidebar.generateSidebar(projects, _activeProject));
@@ -88,7 +93,7 @@ const content = (function() {
             function _addAddProjectButton() {
                 const addProjectButton = createElement({tag: 'div', classList: ['add-project']});
                 addProjectButton.appendChild(createElement({tag: 'div', classList: ['fa-solid', 'fa-plus-circle']}));
-                addProjectButton.addEventListener('click', () => pubSub.publish('addProject', {name: 'New Project'}));
+                addProjectButton.addEventListener('click', () => pubSub.publish('addProject', {projectName: 'New Project'}));
                 
                 return addProjectButton;
             }            
@@ -110,7 +115,7 @@ const content = (function() {
             const divProjName = createElement({
                 tag: 'div',
                 parent: inputContainer,
-                textContent: project.name,
+                textContent: project.projectName,
                 classList: ['project-name'],
             });
 
@@ -118,7 +123,7 @@ const content = (function() {
                 tag: 'input',
                 type: 'text',
                 placeholder: '<project name>',
-                value: project.name,
+                value: project.projectName,
                 classList: ['project-name'],
             });            
 
@@ -152,12 +157,12 @@ const content = (function() {
                     return;
                 }
 
-                pubSub.publish('changeProject', { id: project.id, name: e.target.value })
+                pubSub.publish('changeProject', { id: project.id, projectName: e.target.value })
             }
 
             function _handleInputKeyPress(e) {
                 if (e.key === 'Escape') {
-                    inputProjName.value = project.name;
+                    inputProjName.value = project.projectName;
 
                     document.activeElement?.blur();
                     window.focus();
@@ -198,7 +203,7 @@ const content = (function() {
         let sortDirection = SortDirection.Descending;
 
         function _getSortedTodoItems(project) {
-            let items = project.getTodoItems();
+            let items = project.todoItems;
 
             switch (primarySortField) {
                 case SortOrder.Title:
@@ -328,7 +333,7 @@ const content = (function() {
                 const divTodoCard = createElement({tag: 'div',
                                                 classList: ['todo-card'],
                                                 id: todoItem.id});
-                if (todoItem.isDone()) {
+                if (todoItem.done) {
                     divTodoCard.classList.add('todo-done');
                 }
 
@@ -355,7 +360,7 @@ const content = (function() {
 
                     divTodoDetails.appendChild(_generateExpandedTodoItemContent(todoItem));
 
-                    if (todoItem.isDone()) {
+                    if (todoItem.done) {
                         divTodoDetails.classList.add('todo-done');
                     }
                 } 
@@ -387,10 +392,10 @@ const content = (function() {
                         type: 'checkbox',
                         parent: checkboxContainer,
                         name: todoItem.title,
-                        checked: todoItem.isDone()
+                        checked: todoItem.done
                     });
         
-                    // checkboxInput.checked = todoItem.isDone();
+                    // checkboxInput.checked = todoItem.done;
                     checkboxInput.addEventListener('change', () => pubSub.publish('toggleItemDone', {id: todoItem.id}));
         
                     return checkboxContainer;
@@ -505,9 +510,14 @@ const content = (function() {
         }
     })();
 
+    function getActiveProject() {
+        return _activeProject;
+    }
+
     function setActiveProject(project) {
         _activeProject = project;
         
+        // Highlight the active project in the sidebar:
         const projects = todoList.getProjects();
         for (let i = 0; i < projects.length; i++) {
             document.querySelector(`#${projects[i].id}`)?.classList.remove('active');
@@ -533,6 +543,7 @@ const content = (function() {
         generateContent,
         updateProject,
         setActiveProject,
+        getActiveProject,
         updateTodoItem: page.updateTodoItem,
         updatePage: page.updatePage,
     };
@@ -578,14 +589,14 @@ const footer = (function() {
 })();
 
 const display = (function() {
-    function renderSite(projects, activeProject) {
+    function renderSite(projects) { // activeProject) {
         // Render the site (including header and footer).
 
         deleteAllChildren('div#site');
 
         const site = document.querySelector('div#site');
         site?.appendChild(header.generateHeader());
-        site?.appendChild(content.generateContent(projects, activeProject));
+        site?.appendChild(content.generateContent(projects)); //, activeProject));
         site?.appendChild(footer.generateFooter());
     }
 
@@ -593,11 +604,11 @@ const display = (function() {
         console.log(`MESSAGE: ${message}`);
     }
 
-    function updateContent(projects, activeProject) {
+    function updateContent(projects) {
         // Render site content (sidebar and todo list items).
         
         const page = document.querySelector('.site__content');
-        const updatedPage = content.generateContent(projects, activeProject);
+        const updatedPage = content.generateContent(projects, content.getActiveProject());
         page?.replaceWith(updatedPage);
     }
 
@@ -607,6 +618,7 @@ const display = (function() {
         showMessage,
         updateTodoItem: content.updateTodoItem,
         updateProject: content.updateProject,
+        getActiveProject: content.getActiveProject,
         setActiveProject: content.setActiveProject,
         updatePage: content.updatePage
     };

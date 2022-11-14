@@ -1,22 +1,13 @@
-// TO DO
-// 
-// - add project button
-// - delete project
-// 
-// - input todo item date
-// 
-// - local storage
-// 
-// - styling
-
 import * as projectModule from './todo-project';
 import * as itemModule from './todo-item';
 
+const LOCAL_STORAGE_ID = 'todolist-d9ca00ce-6574-42bd-bf2e-de22444f4ff5';
+
 const todoList = (function() {
     let _projects = [];
-    
+        
     const getProjects = () => _projects;
-    const getProjectNames = () => _projects.map(el => el.name);
+    const getProjectNames = () => _projects.map(el => el.projectName);
 
     function addProject(projectName) {
         const project = projectModule.createProject(projectName);
@@ -48,7 +39,9 @@ const todoList = (function() {
             console.log('Project not found!');
         }
         else {
-            return Object.assign(_projects[idx], data);
+            const project = Object.assign(_projects[idx], data);
+            
+            return project;
         }
     }
 
@@ -80,7 +73,7 @@ const todoList = (function() {
     function toggleTodoItemDone(project, id) {
         const todoItem = project.getTodoItem(id);
 
-        todoItem?.toggleDone();
+        todoItem.done = !todoItem.done;
 
         return todoItem;
     }
@@ -91,7 +84,9 @@ const todoList = (function() {
             return false;
         }
 
-        return project.changeTodoItem(modifiedTodoItem);
+        project.changeTodoItem(modifiedTodoItem);
+
+        return project;
     }
 
     function deleteTodoItem(project, id) {
@@ -100,10 +95,13 @@ const todoList = (function() {
             return false;
         }
 
-        return project.deleteTodoItem(id);
+        project.deleteTodoItem(id);
+
+        return project;
     }
 
     return {
+        projects: _projects,
         addProject,
         deleteProject,
         changeProject,
@@ -117,4 +115,62 @@ const todoList = (function() {
     }
 })();
 
-export { todoList };
+function saveToLocalStorage() {
+    localStorage.removeItem(LOCAL_STORAGE_ID);
+    localStorage.setItem(LOCAL_STORAGE_ID, JSON.stringify(todoList));
+}
+
+function getFromLocalStorage() {
+    let projects = getStoredProjects();
+    if (!projects || projects?.length === 0) {
+        return false;
+    }
+
+    // Load stored data:
+    for (let i = 0; i < projects.length; i++) {
+        // Load project:
+        let proj = todoList.addProject(''); // create an empty project object
+        proj.id = projects[i].id;
+        proj.projectName = projects[i].projectName;
+        
+        // Load the todo items in this project:
+        let items = projects[i].todoItems;
+        if (!items || items?.length === 0) {
+            continue;
+        }
+
+        for (let j = items.length - 1; j >= 0; j--) {
+            let item = itemModule.createTodoItem();
+            Object.assign(item, items[j]);
+            proj.addTodoItem(item, false);
+        }
+    }
+
+    return true;
+
+    function getStoredProjects() {
+        const storage = localStorage.getItem(LOCAL_STORAGE_ID);
+
+        if (!storage) {
+            return null;
+        }
+    
+        const data = JSON.parse(storage);
+        if (!data) {
+            return null;
+        }
+    
+        const projects = data.projects;
+        if (projects.length === 0) {
+            return null;
+        }
+
+        return projects;
+    }
+}
+
+export {
+    todoList,
+    saveToLocalStorage,
+    getFromLocalStorage,
+};

@@ -1,11 +1,14 @@
 import { v4 as uuidv4, v4 } from 'uuid';
+import { createTodoItem } from './todo-item';
 
-function createProject(name) {
-    let _todoItems = [];
-    let _pendingTodoItem; // todo item added through UI and not yet confirmed
-
-    const _getTodoItemIndex = (id) => _todoItems.findIndex(el => el.id === id);
-
+function createProject(projectName) {
+    const id = 'proj-' + uuidv4();
+    
+    let todoItems = [];
+    let _pendingTodoItem; // todo item added through UI and not yet confirmed by user
+    
+    const _getTodoItemIndex = (id) => todoItems.findIndex(el => el.id === id);
+    
     function addTodoItem(todoItem, isPending) {
         if (isPending) {
             // This item is to be confirmed by the user
@@ -13,14 +16,14 @@ function createProject(name) {
             _pendingTodoItem = todoItem;
         } 
         else {
-            _todoItems.unshift(todoItem);
+            todoItems.unshift(todoItem);
         }
     }
 
     function changeTodoItem(modifiedTodoItem) {
         let item = getTodoItem(modifiedTodoItem.id);
         if (!item) {
-            console.log(`Item ${modifiedTodoItem?.id} not found in ${this.changeTodoItem.name}`);
+            console.log(`Item ${modifiedTodoItem?.id} not found in ${this.projectName}`);
             return item;
         }
         
@@ -47,24 +50,20 @@ function createProject(name) {
             console.log(`Todo item not found!`);
         }
         else {
-            _todoItems.splice(idx, 1);
+            todoItems.splice(idx, 1);
         }
 
         return (idx > -1);
     }
 
     function getTodoItem(id) {
-        let item = _todoItems.find(el => el.id === id);
+        let item = todoItems.find(el => el.id === id);
         
         if (!item && id === _pendingTodoItem?.id) {
             item = _pendingTodoItem;
         }
         
         return item;
-    }
-
-    function getTodoItems() {
-        return _todoItems;
     }
 
     function isPendingTodoItem(todoItem) {
@@ -89,8 +88,9 @@ function createProject(name) {
     }
 
     return {
-        'id': 'id' + uuidv4(),
-        name,
+        id,
+        todoItems,
+        projectName,
         addTodoItem,
         changeTodoItem,
         deleteTodoItem,
@@ -98,7 +98,6 @@ function createProject(name) {
         getPendingTodoItem,
         isPendingTodoItem,
         confirmPendingTodoItem,
-        getTodoItems,
     }
 }
 

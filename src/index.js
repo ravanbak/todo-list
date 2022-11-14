@@ -1,21 +1,13 @@
 import "./style.css";
 import * as pubSub from './pubsub';
 import { display } from './display';
-import { todoList } from "./todo-list";
+import { todoList, saveToLocalStorage, getFromLocalStorage } from "./todo-list";
 import { Priority } from "./todo-item";
 
 const controller = (function() {
-    const _DEFAULT_PROJECT_NAME = 'To Do';
-    let _DEFAULT_PROJECT_ID;
-
-    let _activeProject;
-
     const init = (function() {
-        _setActiveProject(todoList.addProject(_DEFAULT_PROJECT_NAME).id);
-        _DEFAULT_PROJECT_ID = _activeProject.id;
-
         pubSub.subscribe('addProject', data => {
-            _activeProject = todoList.addProject(data.name);
+            display.setActiveProject(todoList.addProject(data.projectName));
 
             _updateContent();
         });
@@ -29,32 +21,34 @@ const controller = (function() {
         });
         
         pubSub.subscribe('selectProject', data => { 
-            _setActiveProject(data.id);
+            display.setActiveProject(todoList.getProject(data.id));
+
             display.updatePage();
         });
 
         pubSub.subscribe('addItem', data => {
-            const todoItem = todoList.addTodoItem(_activeProject, '', '', Date.now(), Priority.Normal, '', data.isPending)
+            const proj = display.getActiveProject();
+            todoList.addTodoItem(proj, '', '', Date.now(), Priority.Normal, '', data.isPending)
 
             display.updatePage();
         });
 
         pubSub.subscribe('confirmItem', () => {
-            _activeProject?.confirmPendingTodoItem();
+            display.getActiveProject()?.confirmPendingTodoItem();
 
             display.updatePage();
         });
 
         pubSub.subscribe('deleteItem', data => {
-            todoList.deleteTodoItem(_activeProject, data.id);
+            todoList.deleteTodoItem(display.getActiveProject(), data.id);
 
             display.updatePage();
         });
 
         pubSub.subscribe('changeItem', data => {
-            todoList.changeTodoItem(_activeProject, data);
+            todoList.changeTodoItem(display.getActiveProject(), data);
 
-            display.updateTodoItem(_activeProject.getTodoItem(data.id));
+            display.updateTodoItem(display.getActiveProject().getTodoItem(data.id));
         });
 
         pubSub.subscribe('changeProject', data => {
@@ -64,26 +58,32 @@ const controller = (function() {
         });
 
         pubSub.subscribe('toggleItemDone', data => {
-            const todoItem = todoList.toggleTodoItemDone(_activeProject, data.id);
+            const todoItem = todoList.toggleTodoItemDone(display.getActiveProject(), data.id);
 
             display.updateTodoItem(todoItem);
         });
 
-        _updateContent();
+        // Save the entire todo list to local storage when any
+        // of the below events are fired:
+        pubSub.subscribe('addProject', saveToLocalStorage);
+        pubSub.subscribe('deleteProject', saveToLocalStorage);
+        pubSub.subscribe('addItem', saveToLocalStorage);
+        pubSub.subscribe('confirmItem', saveToLocalStorage);
+        pubSub.subscribe('deleteItem', saveToLocalStorage);
+        pubSub.subscribe('changeItem', saveToLocalStorage);
+        pubSub.subscribe('changeProject', saveToLocalStorage);
+        pubSub.subscribe('toggleItemDone', saveToLocalStorage);
     })();
-
-    function _setActiveProject(id) {
-        _activeProject = todoList.getProject(id)
-        display.setActiveProject(_activeProject);
-    }
 
     function _updateContent() {
         // Update sidebar and page.
-        display.updateContent(todoList.getProjects(), _activeProject);
+        display.updateContent(todoList.getProjects(), display.getActiveProject());
     }
 
     const createTestData = (function() {
-        const project = todoList.getProject(_DEFAULT_PROJECT_ID);
+        localStorage.clear();
+
+        const project = todoList.addProject('To Do');
         todoList.addTodoItem(project, 'finish this project', 'this project is a todo list', '2022-10-09', Priority.High, 'check the box when done');
         todoList.addTodoItem(project, 'add button to expand/collapse all todo items');
         todoList.addTodoItem(project, 'add box shadows', 'cross off', '', Priority.Low);
@@ -120,11 +120,30 @@ const controller = (function() {
         todoList.addTodoItem(yard, 'level lawn');
         todoList.addTodoItem(yard, 'plant grass seed');
         todoList.addTodoItem(yard, 'set up sprinkler');
-    })();
+    });
 
     return {
-        defaultProjectID: _DEFAULT_PROJECT_ID,
+        createTestData, 
     }
 })();
 
-display.renderSite(todoList.getProjects(), todoList.getProject(controller.defaultProjectID));
+const useLocalStorage = true;
+
+if (useLocalStorage) {
+    const loadedFromLocalStorage = getFromLocalStorage();
+    
+    if (!loadedFromLocalStorage) {
+        console.log('No todo list data found in local storage.');
+    
+        const _DEFAULT_PROJECT_NAME = 'To Do';
+        display.setActiveProject(todoList.addProject(_DEFAULT_PROJECT_NAME).id);
+    }
+} 
+else {
+    controller.createTestData();
+    if (todoList.projects.length > 0) {
+        display.setActiveProject(todoList.projects[0]);
+    }
+}
+
+display.renderSite(todoList.getProjects());

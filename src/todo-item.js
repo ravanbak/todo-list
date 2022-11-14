@@ -6,31 +6,17 @@ const Priority = Object.freeze({
     Low: -1,
 });
 
-function createTodoItem(title, description, dueDate, priority = Priority.Normal, notes) {
-    let _done = false;
-
-    function hasDetails() {
-        return (this.description || this.dueDate || this.notes);
-    }
-
-    function toggleDone() {
-        _done = !_done;
-    }
-
-    function isDone() {
-        return _done;
-    }
+function createTodoItem(title, description, dueDate, priority = Priority.Normal, notes, done = false) {
+    const id = 'item-' + uuidv4();
 
     return {
-        'id': 'id' + uuidv4(),
+        id,
+        done,
         title,
         description,
         dueDate,
         priority,
         notes,
-        hasDetails,
-        isDone,
-        toggleDone,
     }
 }
 
