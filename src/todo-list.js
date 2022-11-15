@@ -4,75 +4,66 @@ import * as itemModule from './todo-item';
 const LOCAL_STORAGE_ID = 'todolist-d9ca00ce-6574-42bd-bf2e-de22444f4ff5';
 
 const todoList = (function() {
-    let _projects = [];
+    let projects = [];
         
-    const getProjects = () => _projects;
-    const getProjectNames = () => _projects.map(el => el.projectName);
-
     function addProject(projectName) {
         const project = projectModule.createProject(projectName);
 
         if (project) {
-            _projects.push(project);
+            projects.push(project);
 
             return project;
         }
     }
 
     function deleteProject(projectID) {
-        const idx = _projects.findIndex((p) => p.id === projectID );
+        const idx = projects.findIndex((p) => p.id === projectID );
 
         if (idx < 0) {
-            console.log('Project not found!');
+            console.log(`Project not found! Function: ${deleteProject.name}`);
         } 
         else {
-            _projects.splice(idx, 1);
+            projects.splice(idx, 1);
         }
         
         return (idx > -1);
     }
 
     function changeProject(data) {
-        const idx = _projects.findIndex(p => p.id === data.id);
+        const idx = projects.findIndex(p => p.id === data.id);
 
         if (idx < 0) {
-            console.log('Project not found!');
+            console.log(`Project not found! Function: ${changeProject.name}`);
+            return;
         }
-        else {
-            const project = Object.assign(_projects[idx], data);
-            
-            return project;
-        }
+
+        return Object.assign(projects[idx], data);
     }
 
     function getProject(projectID) {
-        const idx = _projects.findIndex(p => p.id === projectID);
+        const idx = projects.findIndex(p => p.id === projectID);
 
         if (idx < 0) {
-            console.log('Project not found!');
+            console.log(`Project not found! Function: ${getProject.name}`);
+            return;
         }
-        else {
-            return _projects[idx];
-        }
+        
+        return projects[idx];
     }
 
     function addTodoItem(project, title, description, dueDate, priority, notes, isPending) {
         if (!project) {
             console.log(`Project not found!`);
-
             return;
         }
 
         const todoItem = itemModule.createTodoItem(title, description, dueDate, priority, notes);
 
-        project.addTodoItem(todoItem, isPending);
-
-        return todoItem;
+        return project.addTodoItem(todoItem, isPending);
     }
 
     function toggleTodoItemDone(project, id) {
         const todoItem = project.getTodoItem(id);
-
         todoItem.done = !todoItem.done;
 
         return todoItem;
@@ -84,9 +75,7 @@ const todoList = (function() {
             return false;
         }
 
-        project.changeTodoItem(modifiedTodoItem);
-
-        return project;
+        return project.changeTodoItem(modifiedTodoItem);
     }
 
     function deleteTodoItem(project, id) {
@@ -95,19 +84,15 @@ const todoList = (function() {
             return false;
         }
 
-        project.deleteTodoItem(id);
-
-        return project;
+        return project.deleteTodoItem(id);
     }
 
     return {
-        projects: _projects,
+        projects,
         addProject,
         deleteProject,
         changeProject,
         getProject,
-        getProjects,
-        getProjectNames,
         addTodoItem,
         changeTodoItem,
         deleteTodoItem,

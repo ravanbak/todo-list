@@ -18,6 +18,8 @@ function createProject(projectName) {
         else {
             todoItems.unshift(todoItem);
         }
+
+        return todoItem;
     }
 
     function changeTodoItem(modifiedTodoItem) {

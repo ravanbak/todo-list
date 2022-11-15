@@ -4,15 +4,16 @@ import { Priority } from './todo-item';
 import { compareAsc, format } from 'date-fns';
 import { todoList } from './todo-list';
 
-// Layout:
-//
-//  Header
-//  ===========
-//  Content (Sidebar, Page)
-//  ===========
-//  Footer
+/*
+Site layout:
+ Header
+ ===========
+ Content (Projects, Items)
+ ===========
+ Footer
+*/
 
-const header = (function() {
+const headerDisplayModule = (function() {
     function generateHeader() {
         const header = createElement({ tag: 'div' });
         header.classList.add('site__header');
@@ -37,31 +38,33 @@ const header = (function() {
     };
 })();
 
-const content = (function() {
+const contentDisplayModule = (function() {
     let _activeProject;
 
     function generateContent(projects, activeProject) {
-        // Generate the sidebar and active todo list content and return
-        // a div containing both.
+        // Generate the sidebar and the active project's todo list content 
+        // and return a div containing both.
 
-        if (activeProject) {
-            _activeProject = activeProject;
+        if (projects.length === 0) {
+            _activeProject = null;
         }
         else {
-            _activeProject = projects[0];
+            _activeProject = activeProject ? activeProject : projects[0];
         }
 
-        const pageContent = createElement({tag: 'div', classList: ['container', 'site__content']});
-        pageContent.appendChild(sidebar.generateSidebar(projects, _activeProject));
+        const siteContent = createElement({tag: 'div', classList: ['container', 'site__content']});
+        
+        // Add projects
+        siteContent.appendChild(projectsDisplayModule.generateContent(projects, _activeProject));
 
-        const pageContainer = pageContent.appendChild(createElement({tag: 'div', classList: [ 'site__page' ]}));
-        pageContainer.appendChild(page.generatePage(_activeProject));
+        // Add items
+        siteContent.appendChild(itemsDisplayModule.generateContent(_activeProject));
 
-        return pageContent;
+        return siteContent;
     }
 
-    const sidebar = (function() {
-        function generateSidebar(projects) {
+    const projectsDisplayModule = (function() {
+        function generateContent(projects) {
             const sidebarContainer = createElement({ tag: 'div', classList: ['site__sidebar'] });
     
             const sidebar = _addSidebarElement();
@@ -100,55 +103,74 @@ const content = (function() {
         }
             
         function generateProjectItem(project) {
-            const inputContainer = createElement({
+            // Create an element displaying the project name and 
+            // buttons for manipulating the project.
+
+            const projectContainer = createElement({
                 tag: 'div', 
                 classList: ['project-container'],
                 id: project.id,
             });
 
-            const editButton = _createEditButton(project);
-            inputContainer.appendChild(editButton);
+            projectContainer.appendChild(_createDeleteButton());
+            projectContainer.appendChild(_createEditButton());
 
-            // Show the project name in a div element and temporarily 
-            // replace the div element with a text input element
-            // when the user chooses to edit the project name.
-            const divProjName = createElement({
-                tag: 'div',
-                parent: inputContainer,
-                textContent: project.projectName,
-                classList: ['project-name'],
-            });
-
-            const inputProjName = createElement({
-                tag: 'input',
-                type: 'text',
-                placeholder: '<project name>',
-                value: project.projectName,
-                classList: ['project-name'],
-            });            
-
-            editButton.addEventListener('click', e => _editProjectName(e));
-            inputProjName.addEventListener('change', e => _acceptProjectName(e));
-            inputProjName.addEventListener('focusout', e => _finishEditProjectName(e));
-            inputProjName.addEventListener('keydown', e => _handleInputKeyPress(e));
+            const { divProjName, inputProjName } = _createProjectNameElements();
             
             // hilight the active project
             if (project.id === _activeProject?.id) {
-                inputContainer.classList.add('active')
+                projectContainer.classList.add('active')
             }
             
-            inputContainer.addEventListener('click', _selectProject);
+            projectContainer.addEventListener('click', () => pubSub.publish('selectProject', { id: project.id }));
 
-            return inputContainer;
+            return projectContainer;
 
-            function _selectProject() {
-                pubSub.publish('selectProject', { id: project.id });
-            }
+            function _createProjectNameElements() {
+                // Create two elements for project name, a div element to display 
+                // the name, and a text input element to edit the project name.
+                // Only one of these elements will be active at any given time.
+                
+                const divProjName = createElement({
+                    tag: 'div',
+                    parent: projectContainer,
+                    textContent: project.projectName,
+                    classList: ['project-name'],
+                });
+
+                const inputProjName = createElement({
+                    tag: 'input',
+                    type: 'text',
+                    placeholder: '<project name>',
+                    value: project.projectName,
+                    classList: ['project-name'],
+                });
+
+                // Handle input events:
+                inputProjName.addEventListener('change', e => _acceptProjectName(e));
+                inputProjName.addEventListener('focusout', e => _finishEditProjectName(e));
+                inputProjName.addEventListener('keydown', e => _handleInputKeyPress(e));
+                
+                return { divProjName, inputProjName };
+
+                function _handleInputKeyPress(e) {
+                    if (e.key === 'Escape') {
+                        inputProjName.value = project.projectName;
     
+                        document.activeElement?.blur();
+                        window.focus();
+                    }
+                }
+            }
+
             function _editProjectName(e) {
                 divProjName.replaceWith(inputProjName);
                 inputProjName.focus(); 
                 inputProjName.select(); 
+            }
+
+            function _finishEditProjectName(e) {
+                inputProjName.replaceWith(divProjName);                
             }
     
             function _acceptProjectName(e) {
@@ -160,34 +182,36 @@ const content = (function() {
                 pubSub.publish('changeProject', { id: project.id, projectName: e.target.value })
             }
 
-            function _handleInputKeyPress(e) {
-                if (e.key === 'Escape') {
-                    inputProjName.value = project.projectName;
+            function _createDeleteButton() {
+                const deleteButton = createElement({
+                    tag: 'div',
+                    classList: ['delete-project', 'fa-solid', 'fa-trash-can', 'hide', 'show-on-hover'],
+                });
 
-                    document.activeElement?.blur();
-                    window.focus();
-                }
+                deleteButton.addEventListener('click', e => pubSub.publish('deleteProject', { id: project.id }));
+
+                return deleteButton;
             }
 
-            function _finishEditProjectName(e) {
-                inputProjName.replaceWith(divProjName);                
-            }
-            
-            function _createEditButton(project) {
-                return createElement({
+            function _createEditButton() {
+                const editButton = createElement({
                     tag: 'div',
                     classList: ['edit-project', 'fa-solid', 'fa-pen', 'hide', 'show-on-hover'],
                 });
-            }            
+
+                editButton.addEventListener('click', e => _editProjectName(e));
+
+                return editButton;                    
+            }
         }
     
         return {
-            generateSidebar,
+            generateContent,
             generateProjectItem,
         };
     })();
     
-    const page = (function() {
+    const itemsDisplayModule = (function() {
         const SortOrder = Object.freeze({
             Title: 0,
             Priority: 1,
@@ -203,6 +227,10 @@ const content = (function() {
         let sortDirection = SortDirection.Descending;
 
         function _getSortedTodoItems(project) {
+            if (!project) {
+                return;
+            }
+            
             let items = project.todoItems;
 
             switch (primarySortField) {
@@ -237,43 +265,45 @@ const content = (function() {
             return items;
         }
 
-        function generatePage(project) {
+        function generateContent(project) {
             // Return a div containing the active project's todo list.
 
-            const page = createElement({tag:'div', classList:['container', 'todo-list']});
-                    
-            const todoItems = _getSortedTodoItems(project);
-            const pendingTodoItem = project.getPendingTodoItem();
+            const content = createElement({tag: 'div', classList: [ 'site__page' ]});
+            const todoItemsContainer = createElement({tag:'div', parent:content, classList:['container', 'todo-list']});
 
             // Container for page controls
             const controlsContainer = createElement({
                 tag: 'div',
-                parent: page,
+                parent: todoItemsContainer,
                 classList: ['controls']
             });
 
-            // Create main control buttons for todo list
-            controlsContainer.appendChild(_createAddItemButton());
-            controlsContainer.appendChild(_createExpandAllButton());
-            controlsContainer.appendChild(_createCollapseAllButton());
-
-            // If there is a pending todo item (item added through UI but not 
-            // yet accepted by the user), display it at the top of the page.
-            if (pendingTodoItem) {
-                page.appendChild(todoCardModule.generateTodoCard(pendingTodoItem));
+            if (project) {
+                // Add main control buttons for todo list
+                controlsContainer.appendChild(_createAddItemButton());
+                controlsContainer.appendChild(_createExpandAllButton());
+                controlsContainer.appendChild(_createCollapseAllButton());
+                
+                // If there is a pending todo item (item added through UI but not 
+                // yet accepted by the user), display it at the top of the page.
+                const pendingTodoItem = project.getPendingTodoItem();
+                if (pendingTodoItem) {
+                    todoItemsContainer.appendChild(todoCardModule.generateTodoCard(pendingTodoItem));
+                }
+                
+                // Display all todo items in the project.
+                const todoItems = _getSortedTodoItems(project);
+                for (let i = 0; i < todoItems.length; i++) {
+                    todoItemsContainer.appendChild(todoCardModule.generateTodoCard(todoItems[i]));
+                }
             }
 
-            // Display all todo items in the project.
-            for (let i = 0; i < todoItems.length; i++) {
-                page.appendChild(todoCardModule.generateTodoCard(todoItems[i]));
-            }
-            
-            return page;
+            return content;
 
             function _setAllItemsExpandedState(todoItems, expanded) {
                 todoItems.forEach(el => el.expanded = expanded); 
                 
-                updatePage();
+                updateContent();
             }
 
             function _createExpandAllButton() {
@@ -281,7 +311,7 @@ const content = (function() {
                     tag: 'div',
                     classList: ['expand-all', 'fa-solid', 'fa-xl', 'fa-angle-double-down'],
                 });
-                button.addEventListener('click', () => _setAllItemsExpandedState(todoItems, true));
+                button.addEventListener('click', () => _setAllItemsExpandedState(project.todoItems, true));
 
                 return button;
             }
@@ -291,7 +321,7 @@ const content = (function() {
                     tag: 'div',
                     classList: ['collapse-all', 'fa-solid', 'fa-xl', 'fa-angle-double-up'],
                 });
-                button.addEventListener('click', () => _setAllItemsExpandedState(todoItems, false));
+                button.addEventListener('click', () => _setAllItemsExpandedState(project.todoItems, false));
 
                 return button;
             }
@@ -308,9 +338,9 @@ const content = (function() {
             }        
         }
 
-        function updatePage() {
-            const page = document.querySelector('.todo-list');
-            page?.replaceWith(generatePage(_activeProject));
+        function updateContent() {
+            const content = document.querySelector('.site__page');
+            content?.replaceWith(generateContent(_activeProject));
         }
 
         const todoCardModule = (function() {
@@ -331,8 +361,8 @@ const content = (function() {
                 // expanded, display details.
 
                 const divTodoCard = createElement({tag: 'div',
-                                                classList: ['todo-card'],
-                                                id: todoItem.id});
+                                                   classList: ['todo-card'],
+                                                   id: todoItem.id});
                 if (todoItem.done) {
                     divTodoCard.classList.add('todo-done');
                 }
@@ -346,7 +376,6 @@ const content = (function() {
 
                 divTodoBasic.appendChild(_createCheckboxInput(todoItem));
                 divTodoBasic.appendChild(_createTextboxInput(todoItem, {field:'title'}));
-                divTodoBasic.appendChild(_createMenuButton(todoItem));
                 divTodoBasic.appendChild(_createDeleteButton(todoItem));
                 divTodoBasic.appendChild(_createExpanderButton(todoItem));
                 
@@ -401,21 +430,6 @@ const content = (function() {
                     return checkboxContainer;
                 }
 
-                function _createMenuButton(todoItem) {
-                    const button = createElement({
-                        tag: 'div',
-                        classList: ['item-menu', 'fa-solid', 'fa-ellipsis-vertical', 'hide', 'show-on-hover'],
-                    });
-        
-                    button.addEventListener('click', () => _showItemMenu(todoItem)); 
-        
-                    return button;
-                }
-
-                function _showItemMenu(todoItem) {
-
-                }
-                    
                 function _createDeleteButton(todoItem) {
                     const button = createElement({
                         tag: 'div',
@@ -504,8 +518,8 @@ const content = (function() {
         }
 
         return {
-            generatePage,
-            updatePage,
+            generateContent,
+            updateContent,
             updateTodoItem,
         }
     })();
@@ -515,19 +529,27 @@ const content = (function() {
     }
 
     function setActiveProject(project) {
-        _activeProject = project;
-        
+        if (project) {
+            _activeProject = project;
+        }
+        else if (todoList.projects.length > 0) {
+            _activeProject = todoList.projects[0];
+        }
+        else {
+            return;
+        }
+
         // Highlight the active project in the sidebar:
-        const projects = todoList.getProjects();
+        const projects = todoList.projects;
         for (let i = 0; i < projects.length; i++) {
             document.querySelector(`#${projects[i].id}`)?.classList.remove('active');
         }
         
-        document.querySelector(`#${project.id}`)?.classList.add('active');
+        document.querySelector(`#${_activeProject.id}`)?.classList.add('active');
     }
 
     function updateProject(project) {
-        const newProjectElement = sidebar.generateProjectItem(project);
+        const newProjectElement = projectsDisplayModule.generateProjectItem(project);
         document.querySelector('#' + project.id)?.replaceWith(newProjectElement);
 
         setActiveProject(_activeProject);
@@ -536,7 +558,7 @@ const content = (function() {
     function _expandCollapseTodoItem(todoItem) {
         todoItem.expanded = !todoItem.expanded;
 
-        page.updateTodoItem(todoItem);
+        itemsDisplayModule.updateTodoItem(todoItem);
     }
 
     return {
@@ -544,12 +566,12 @@ const content = (function() {
         updateProject,
         setActiveProject,
         getActiveProject,
-        updateTodoItem: page.updateTodoItem,
-        updatePage: page.updatePage,
+        updateTodoItem: itemsDisplayModule.updateTodoItem,
+        updateContent: itemsDisplayModule.updateContent,
     };
 })();
 
-const footer = (function() {
+const footerDisplayModule = (function() {
     function generateFooter() {
         const footer = createElement({
             tag: 'div', 
@@ -589,38 +611,33 @@ const footer = (function() {
 })();
 
 const display = (function() {
-    function renderSite(projects) { // activeProject) {
+    function renderSite(projects) {
         // Render the site (including header and footer).
 
         deleteAllChildren('div#site');
 
         const site = document.querySelector('div#site');
-        site?.appendChild(header.generateHeader());
-        site?.appendChild(content.generateContent(projects)); //, activeProject));
-        site?.appendChild(footer.generateFooter());
-    }
-
-    function showMessage(message) {
-        console.log(`MESSAGE: ${message}`);
+        site?.appendChild(headerDisplayModule.generateHeader());
+        site?.appendChild(contentDisplayModule.generateContent(projects)); //, activeProject));
+        site?.appendChild(footerDisplayModule.generateFooter());
     }
 
     function updateContent(projects) {
         // Render site content (sidebar and todo list items).
         
-        const page = document.querySelector('.site__content');
-        const updatedPage = content.generateContent(projects, content.getActiveProject());
-        page?.replaceWith(updatedPage);
+        const content = document.querySelector('.site__content');
+        const updatedContent = contentDisplayModule.generateContent(projects, contentDisplayModule.getActiveProject());
+        content?.replaceWith(updatedContent);
     }
 
     return {
         renderSite,
         updateContent,
-        showMessage,
-        updateTodoItem: content.updateTodoItem,
-        updateProject: content.updateProject,
-        getActiveProject: content.getActiveProject,
-        setActiveProject: content.setActiveProject,
-        updatePage: content.updatePage
+        updateTodoItem: contentDisplayModule.updateTodoItem,
+        updateTodoItems: contentDisplayModule.updateContent,
+        updateProject: contentDisplayModule.updateProject,
+        getActiveProject: contentDisplayModule.getActiveProject,
+        setActiveProject: contentDisplayModule.setActiveProject,
     };
 })();
 

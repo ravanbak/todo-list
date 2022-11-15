@@ -23,26 +23,26 @@ const controller = (function() {
         pubSub.subscribe('selectProject', data => { 
             display.setActiveProject(todoList.getProject(data.id));
 
-            display.updatePage();
+            display.updateTodoItems();
         });
 
         pubSub.subscribe('addItem', data => {
             const proj = display.getActiveProject();
             todoList.addTodoItem(proj, '', '', Date.now(), Priority.Normal, '', data.isPending)
 
-            display.updatePage();
+            display.updateTodoItems();
         });
 
         pubSub.subscribe('confirmItem', () => {
             display.getActiveProject()?.confirmPendingTodoItem();
 
-            display.updatePage();
+            display.updateTodoItems();
         });
 
         pubSub.subscribe('deleteItem', data => {
             todoList.deleteTodoItem(display.getActiveProject(), data.id);
 
-            display.updatePage();
+            display.updateTodoItems();
         });
 
         pubSub.subscribe('changeItem', data => {
@@ -77,7 +77,7 @@ const controller = (function() {
 
     function _updateContent() {
         // Update sidebar and page.
-        display.updateContent(todoList.getProjects(), display.getActiveProject());
+        display.updateContent(todoList.projects, display.getActiveProject());
     }
 
     const createTestData = (function() {
@@ -146,4 +146,4 @@ else {
     }
 }
 
-display.renderSite(todoList.getProjects());
+display.renderSite(todoList.projects);
