@@ -281,8 +281,8 @@ const contentDisplayModule = (function() {
             if (project) {
                 // Add main control buttons for todo list
                 controlsContainer.appendChild(_createAddItemButton());
-                controlsContainer.appendChild(_createExpandAllButton());
                 controlsContainer.appendChild(_createCollapseAllButton());
+                controlsContainer.appendChild(_createExpandAllButton());
                 
                 // If there is a pending todo item (item added through UI but not 
                 // yet accepted by the user), display it at the top of the page.
@@ -345,10 +345,10 @@ const contentDisplayModule = (function() {
 
         const todoCardModule = (function() {
             const _getPriorityClass = (p) => {
-                switch (p) {
-                    case Priority.High:
+                switch (+p) {
+                    case +Priority.High:
                         return 'priority-high';
-                    case Priority.Low:
+                    case +Priority.Low:
                         return 'priority-low';
                     default:
                         return 'priority-normal';
@@ -381,13 +381,8 @@ const contentDisplayModule = (function() {
                 
                 if (todoItem?.expanded) {
                     // Expanded details container
-                    const divTodoDetails = createElement({
-                        tag: 'div',
-                        parent: divTodoCard,
-                        classList: ['todo-card__expanded'],
-                    });
-
-                    divTodoDetails.appendChild(_generateExpandedTodoItemContent(todoItem));
+                    const divTodoDetails = _generateExpandedTodoItemContent(todoItem);
+                    divTodoCard.appendChild(divTodoDetails);
 
                     if (todoItem.done) {
                         divTodoDetails.classList.add('todo-done');
@@ -443,21 +438,50 @@ const contentDisplayModule = (function() {
             }
 
             function _generateExpandedTodoItemContent(todoItem) {
-                const divExpanded = createElement({tag: 'div'});
+                const divTodoDetails = createElement({
+                    tag: 'div',
+                    classList: ['todo-card__expanded'],
+                });
+
+                // Priority
+                const priorityContainer = divTodoDetails.appendChild(_createContainerWithIcon('exclamation-triangle'));
+                priorityContainer.appendChild(createElement({tag: 'div', textContent: 'Priority:'}));
+                priorityContainer.appendChild(_createPriorityInput(todoItem, {field:'priority'}));
+                priorityContainer.appendChild(createElement({tag: 'div', textContent: todoItem.getPriorityString()}));
+                priorityContainer.classList.add('priority');
 
                 // Due date
-                const dueDateContainer = divExpanded.appendChild(_createContainerWithIcon('calendar-alt'));
+                const dueDateContainer = divTodoDetails.appendChild(_createContainerWithIcon('calendar-alt'));
                 dueDateContainer.appendChild(_createDateInput(todoItem, {field:'dueDate'}));
 
                 // Description
-                const infoContainer = divExpanded.appendChild(_createContainerWithIcon('info-circle'));
+                const infoContainer = divTodoDetails.appendChild(_createContainerWithIcon('info-circle'));
                 infoContainer.appendChild(_createTextboxInput(todoItem, {field:'description'}));
 
                 // Notes
-                const notesContainer = divExpanded.appendChild(_createContainerWithIcon('clipboard'));
+                const notesContainer = divTodoDetails.appendChild(_createContainerWithIcon('clipboard'));
                 notesContainer.appendChild(_createTextboxInput(todoItem, {field:'notes'}));
 
-                return divExpanded;
+                return divTodoDetails;
+
+                function _createPriorityInput(todoItem, args) {
+                    let priorityClass = `priority-${todoItem.getPriorityString().toLowerCase()}`;
+
+                    const rangeInput = createElement({
+                        tag: 'input',
+                        type: 'range',
+                        min: -1,
+                        max: 1,
+                        value: todoItem.priority,
+                        classList: [priorityClass],
+                    });
+                    
+                    rangeInput.addEventListener('input', (e) => pubSub.publish('changeItem', 
+                                                                                {id: todoItem.id, 
+                                                                                 [args.field]: e.target.value}));
+
+                    return rangeInput;
+                }
 
                 function _createDateInput(todoItem, args) {
                     const dateInput = createElement({
@@ -471,7 +495,7 @@ const contentDisplayModule = (function() {
                     }
         
                     dateInput.addEventListener('change', (e) => pubSub.publish('changeItem', 
-                                                                            {id: todoItem.id, 
+                                                                               {id: todoItem.id, 
                                                                                 [args.field]: e.target.value}));
         
                     return dateInput;
@@ -494,6 +518,7 @@ const contentDisplayModule = (function() {
                     tag: 'input',
                     type: 'text',
                     placeholder: args.field,
+                    classList: [args.field],
                 });
                 
                 if (!_activeProject?.isPendingTodoItem(todoItem) && todoItem[args.field]) {

@@ -9,6 +9,19 @@ const Priority = Object.freeze({
 function createTodoItem(title, description, dueDate, priority = Priority.Normal, notes, done = false) {
     const id = 'item-' + uuidv4();
 
+    function getPriorityString() {
+        switch (+this.priority) {
+            case Priority.Low:
+                return 'Low';
+                break;
+            case Priority.High:
+                return 'High';
+                break;
+            default:
+                return 'Normal';
+        }
+    }
+
     return {
         id,
         done,
@@ -16,6 +29,7 @@ function createTodoItem(title, description, dueDate, priority = Priority.Normal,
         description,
         dueDate,
         priority,
+        getPriorityString,
         notes,
     }
 }
