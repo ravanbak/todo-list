@@ -100,12 +100,40 @@ const todoList = (function() {
     }
 })();
 
+function localStorageAvailable() {
+    console.log('Checking local storage availability...');
+
+    let storage;
+    try {
+        storage = window['localStorage'];
+        const x = '__storage_test__';
+        storage.setItem(x, x);
+        storage.removeItem(x);
+
+        return true;
+    }
+    catch(e) {
+        if (e instanceof DOMException) {
+            return ((e.name == 'QuotaExceededError' || 
+                     e.name == 'NS_ERROR_DOM_QUOTA_REACHED') && 
+                     storage && 
+                     storage.length !== 0)
+        } 
+        
+        return false;
+    }
+}
+
 function saveToLocalStorage() {
+    if (!localStorageAvailable()) return false;
+
     localStorage.removeItem(LOCAL_STORAGE_ID);
     localStorage.setItem(LOCAL_STORAGE_ID, JSON.stringify(todoList));
 }
 
 function getFromLocalStorage() {
+    if (!localStorageAvailable()) return false;
+
     let projects = getStoredProjects();
     if (!projects || projects?.length === 0) {
         return false;

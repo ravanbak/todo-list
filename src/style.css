@@ -7,12 +7,12 @@
     --color-todo-card-done: hsl(100%, 30%, 30%);
     --color-todo-card-done-background: hsl(0, 0%, 86%);
     --color-todo-card-checkbox-background: #009900;
-    --color-input-focussed-background: rgb(211, 237, 253);
+    --color-input-focussed-background: rgb(255, 250, 184);
     --color-active-project: #ffbf7b;
     --color-priority-high: red;
     --color-priority-normal: #55EE44;
     --color-priority-low: #eedd00;
-    --box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+    --box-shadow: 0px 0px 4px #00000033;
     --size-icon: 2.5ch;
 }
 
@@ -24,6 +24,7 @@ body {
     margin: 0;
     padding: 0;
     background-color: hsl(184, 9%, 75%);
+    box-sizing: border-box;
 }
 
 .site__content * {
@@ -58,46 +59,56 @@ body {
 .site__sidebar {
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    flex-grow: 1;
+    padding: 20px 5px;
     border-right: solid 1px var(--color-todo-card-border);
-    font-size: 2rem;
     font-weight: bold;
     text-align: center;
-    min-width: 250px;
-    max-width: 250px;
+    width: max(100px, 20vw);
 }
 
 .site__sidebar .projects-container {
-    font-size: 1rem;
+    display: flex;
+    flex-direction: column;
+    font-size: 0.65rem;
     padding: 25px 5px 30px 5px;
     margin: 20px 0;
     background-color: var(--color-todo-card-background);
     border: solid 1px var(--color-todo-card-border);
     border-radius: 6px;
     align-items: flex-end;
+}
 
+.site__sidebar .edit-project {
+    margin-right: auto;
+}
+
+.site__sidebar .delete-project {
+    margin-left: 0;
+    padding-left: 0;
 }
 
 .site__sidebar .project-container {
     display: flex;
-    padding: 10px 25px;
+    flex-wrap: wrap;
+    width: 100%;
+    padding: 10px 5px;
     border-radius: 6px;
-    align-items: right;
-    justify-content: right;
     text-align: right;
+    justify-content: right;
 }
 
-.site__sidebar .edit-project {
-    margin-right: 15px;
+.site__sidebar div.project-name {
+    overflow-wrap: break-word;
+    max-width: 100%;
 }
 
-.site__sidebar .delete-project {
-    margin-right: 5px;
+.site__sidebar .project-container.active {
+    background-color: var(--color-active-project);
 }
 
 .projects-container input[type=text] {
     size: 30;
-    font-size: 1rem;
     text-align: right;
     background-color: var(--color-input-focussed-background);
     width: 100%;
@@ -105,8 +116,15 @@ body {
     border: 0;
 }
 
-.site__sidebar .project-container.active {
-    background-color: var(--color-active-project);
+.site__page {
+    margin: 0;
+    padding: 20px 0;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    width: 100%;
+    min-width: 200px;
+    font-size: 1rem;
+    height: calc(100vh - 160px - 40px - 36px);
 }
 
 .todo-list {
@@ -144,9 +162,19 @@ div.controls {
     -webkit-appearance: none;
     background: transparent;
     cursor: pointer;
-    width: 4rem;
-    border-radius: 2rem;
-    height: 0.5rem;
+    width: 2rem;
+    border-radius: 1rem;
+    /* font-size: 5.1rem; */
+    height: 0.25rem;
+}
+
+.todo-card input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: #4bb1ff;
+    border-radius: 50%;
+    height: 10px;
+    width: 10px;
 }
 
 .todo-card input.priority-high {
@@ -161,22 +189,27 @@ div.controls {
     background-color: var(--color-priority-low);
 }
 
-.todo-card input[type=text] {
+/* .todo-card input[type=text] { */
+.todo-card textarea {
+    flex-grow: 1;
     background-color: inherit;
     border-radius: 3px;
-    border: none;
+    border: solid 1px #80808030;
+    /* margin: 0 0px; */
     transition: 0.2s;
     size: 10;
+    /* width: 100%; */
+    height: 3rem;
+    overflow-wrap: break-word;
 }
 
-.todo-card input[type=text]:focus {
+.todo-card textarea:focus {
     background-color: var(--color-input-focussed-background);
-    /* color: white; */
     outline: none;
     size: 5;
 }
 
-.todo-card input[type=text]:focus::placeholder {
+.todo-card textarea:focus::placeholder {
     color: gray;
 }
 
@@ -192,7 +225,7 @@ div.controls {
     border-radius: 6px;
     /* border: 1px solid var(--color-todo-card-border); */
     margin: 6px;
-    box-shadow: 0px 0px 4px #00000033;
+    box-shadow: var(--box-shadow);
 }
 
 .show-on-hover
@@ -212,16 +245,23 @@ div.controls {
     opacity: 1;
 }
 
+.todo-card * {
+    font-size: 0.65rem;
+}
+
 .todo-card__basic {
     display: flex;
+    /* flex-wrap: wrap; */
     padding: 5px;
     align-items: center;
 }
 
-.todo-card__basic input[type=text] {
+/* .todo-card__basic input[type=text] { */
+.todo-card__basic textarea {
     padding-left: 10px;
     flex-grow: 1;
-    font-size: inherit;
+    /* width: 60%; */
+    /* font-size: inherit; */
     justify-content: center;
     align-items: center;
 }
@@ -229,7 +269,10 @@ div.controls {
 div.todo-card__expanded {
     display: flex;
     flex-direction: column;
-    margin: 10px 3ch 5px 3ch;
+    flex-wrap: wrap;
+    margin: 10px;
+    /* border: solid 1px var(--color-active-project); */
+    box-shadow: var(--box-shadow);
     padding: 5px;
     border-radius: 6px;
 }
@@ -249,12 +292,9 @@ div.todo-card__expanded {
 
 div.detail-container {
     display: flex;
-    margin-top: 10px;
-    font-size: 0.8rem;
-}
-
-div.detail-container input[type=text] {
-    flex-grow: 1;
+    flex-wrap: wrap;
+    margin: 10px 0 0 0;
+    /* width: 100%; */
 }
 
 div.detail-container:first-child {
@@ -262,14 +302,18 @@ div.detail-container:first-child {
 }
 
 div.detail-container > .fa-solid {
-    width: 4ch;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: top;
+    flex-grow: 1;
+    min-width: 4ch;
+    max-width: 4ch;
     color: rgb(42, 64, 64);
 }
 
 .checkbox input {
-    width: 2.2ch;
-    height: 2.2ch;
+    width: 2ch;
+    height: 2ch;
     accent-color: var(--color-todo-card-checkbox-background);
     outline: none;
 }
@@ -278,8 +322,8 @@ div.detail-container > .fa-solid {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-width: 2.5ch;
-    min-height: 2.5ch;
+    min-width: 2ch;
+    min-height: 2ch;
     border-radius: 3px;
     background-color: var(--color-priority-normal);
 }
@@ -304,16 +348,6 @@ div.detail-container > .fa-solid {
 
 .todo-done .title {
     text-decoration: line-through;
-}
-
-.site__page {
-    margin: 0;
-    padding: 20px;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    width: 100%;
-    /* height: calc(100vh - 160px - 40px - 36px); */
-    height: calc(100vh - 160px - 40px - 16px);
 }
 
 .site__footer {

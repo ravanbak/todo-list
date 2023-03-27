@@ -13,11 +13,14 @@ const controller = (function() {
         });
         
         pubSub.subscribe('deleteProject', data => {
-            if (!todoList.deleteProject(data.id)) {
-                return;
+            console.log(data);
+            if (confirm(`Delete your project named "${todoList.getProject(data.id)?.projectName}"?`)) {
+                if (!todoList.deleteProject(data.id)) {
+                    return;
+                }
+                
+                _updateContent();
             }
-            
-            _updateContent();
         });
         
         pubSub.subscribe('selectProject', data => { 
@@ -40,9 +43,11 @@ const controller = (function() {
         });
 
         pubSub.subscribe('deleteItem', data => {
-            todoList.deleteTodoItem(display.getActiveProject(), data.id);
+            if (confirm(`Delete this item?:\n\n "${display.getActiveProject()?.getTodoItem(data.id)?.title}"`)) {
+                todoList.deleteTodoItem(display.getActiveProject(), data.id);
 
-            display.updateTodoItems();
+                display.updateTodoItems();
+            }
         });
 
         pubSub.subscribe('changeItem', data => {

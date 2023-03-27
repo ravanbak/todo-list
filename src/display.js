@@ -95,7 +95,7 @@ const contentDisplayModule = (function() {
 
             function _addAddProjectButton() {
                 const addProjectButton = createElement({tag: 'div', classList: ['add-project']});
-                addProjectButton.appendChild(createElement({tag: 'div', classList: ['fa-solid', 'fa-plus-circle']}));
+                addProjectButton.appendChild(createElement({tag: 'div', classList: ['fa-solid', 'fa-xl', 'fa-plus-circle']}));
                 addProjectButton.addEventListener('click', () => pubSub.publish('addProject', {projectName: 'New Project'}));
                 
                 return addProjectButton;
@@ -507,16 +507,15 @@ const contentDisplayModule = (function() {
 
                 const container = createElement({tag: 'div', classList:['detail-container']});
                 container.appendChild(createElement({tag: 'div', 
-                                                    classList: ['fa-solid', 
-                                                                `fa-${faIconName}`]}));
+                                                     classList: ['fa-solid', 
+                                                                 `fa-${faIconName}`]}));
 
                 return container;
             }
 
             function _createTextboxInput(todoItem, args) {
                 const input = createElement({
-                    tag: 'input',
-                    type: 'text',
+                    tag: 'textarea',
                     placeholder: args.field,
                     classList: [args.field],
                 });
@@ -531,6 +530,24 @@ const contentDisplayModule = (function() {
 
                 return input;
             }
+            // function _createTextboxInput(todoItem, args) {
+            //     const input = createElement({
+            //         tag: 'input',
+            //         type: 'text',
+            //         placeholder: args.field,
+            //         classList: [args.field],
+            //     });
+                
+            //     if (!_activeProject?.isPendingTodoItem(todoItem) && todoItem[args.field]) {
+            //         input.value = todoItem[args.field];
+            //     }
+
+            //     input.addEventListener('change', (e) => pubSub.publish('changeItem', 
+            //                                                            {id: todoItem.id, 
+            //                                                             [args.field]: e.target.value}));
+
+            //     return input;
+            // }
 
             return {
                 generateTodoCard
